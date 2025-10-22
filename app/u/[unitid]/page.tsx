@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 // app/u/[unitid]/page.tsx
 import { notFound } from 'next/navigation'
 import { getEfSeriesByUnitId, EF_DISPLAY_ORDER } from '../../../lib/ef'
