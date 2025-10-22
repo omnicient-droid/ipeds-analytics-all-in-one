@@ -12,13 +12,13 @@ const METRICS = [
   { code:'SC.ADM.RATE',  name:'Admission rate (overall)', unit:'ratio',
     paths:(yr:number)=>[y(yr,'admissions','admission_rate','overall')] },
   { code:'SC.SAT.TOTAL25', name:'SAT Total 25th percentile', unit:'score',
-    paths:(yr)=>[y(yr,'admissions','sat_scores','25th_percentile','overall')] },
+    paths:(yr: number)=>[y(yr,'admissions','sat_scores','25th_percentile','overall')] },
   { code:'SC.SAT.TOTAL75', name:'SAT Total 75th percentile', unit:'score',
-    paths:(yr)=>[y(yr,'admissions','sat_scores','75th_percentile','overall')] },
+    paths:(yr: number)=>[y(yr,'admissions','sat_scores','75th_percentile','overall')] },
   { code:'SC.ACT.COMP25',  name:'ACT Composite 25th percentile', unit:'score',
-    paths:(yr)=>[y(yr,'admissions','act_scores','25th_percentile','cumulative')] },
+    paths:(yr: number)=>[y(yr,'admissions','act_scores','25th_percentile','cumulative')] },
   { code:'SC.ACT.COMP75',  name:'ACT Composite 75th percentile', unit:'score',
-    paths:(yr)=>[y(yr,'admissions','act_scores','75th_percentile','cumulative')] },
+    paths:(yr: number)=>[y(yr,'admissions','act_scores','75th_percentile','cumulative')] },
 ]
 
 function firstNonNull(obj:any, paths:string[]): number|null {

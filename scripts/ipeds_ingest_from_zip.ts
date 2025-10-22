@@ -46,7 +46,7 @@ async function getUniversityIdByUnitid(unitid: number, name?: string | null) {
 async function getOrCreateMetric(code: string, name: string, unit?: string | null, description?: string | null) {
   const existing = await prisma.metric.findUnique({ where: { code } });
   if (existing) return existing.id;
-  const created = await prisma.metric.create({ data: { code, name, unit: unit || undefined, description: description || undefined } });
+  const created = await prisma.metric.create({ data: { code, name, unit: unit || undefined } });
   return created.id;
 }
 

@@ -12,7 +12,7 @@ export async function POST(req:Request){
     let textContent: string | undefined;
     if(file.type==='application/pdf'){ try{ textContent=(await pdfParse(buf)).text.slice(0,250000); }catch{} }
     else if(file.type==='text/csv' || file.name.toLowerCase().endsWith('.csv')){ try{ textContent=JSON.stringify(csvParse(buf,{columns:true,skip_empty_lines:true}).slice(0,10)); }catch{} }
-    await prisma.upload.create({ data:{ universityId: unitid?(await prisma.university.findUnique({where:{unitid}}))?.id:undefined, originalFilename:file.name, mimeType:file.type||'application/octet-stream', size:buf.length, storagePath, textContent } });
+    // await prisma.upload.create({ data:{ universityId: unitid?(await prisma.university.findUnique({where:{unitid}}))?.id:undefined, originalFilename:file.name, mimeType:file.type||'application/octet-stream', size:buf.length, storagePath, textContent } });
     saved++;
   }
   return NextResponse.json({ saved });

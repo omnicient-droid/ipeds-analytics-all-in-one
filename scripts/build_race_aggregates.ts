@@ -67,7 +67,7 @@ async function main() {
   }
 
   const totalMetric =
-    efMetrics.find((m) => /enrol/i.test(m.name) && /total/i.test(m.name) && !/female|male|women|men/i.test(m.name)) ||
+    efMetrics.find((m) => /enrol/i.test((m.name ?? '')) && /total/i.test((m.name ?? '')) && !/female|male|women|men/i.test((m.name ?? ''))) ||
     efMetrics.find((m) => m.code === 'EF.EFYTOTL') ||
     efMetrics[0];
 
@@ -112,7 +112,7 @@ async function main() {
 
     for (const rc of raceCats) {
       const catMetrics = efMetrics.filter(
-        (m) => rc.re.test(m.name) && /total/i.test(m.name) && !/female|male|women|men/i.test(m.name)
+        (m) => rc.re.test((m.name ?? '')) && /total/i.test((m.name ?? '')) && !/female|male|women|men/i.test((m.name ?? ''))
       );
       if (catMetrics.length === 0) continue;
 
@@ -124,7 +124,7 @@ async function main() {
           _sum: { value: true },
         });
         for (const r of rows) {
-          catSums[r.year] = (catSums[r.year] ?? 0) + (r._sum.value ?? 0);
+          catSums[r.year] = (catSums[r.year] ?? 0) + (Number(r._sum.value) ?? 0);
         }
       }
 
@@ -145,9 +145,9 @@ async function main() {
       );
       for (const row of totalByYear) {
         const tot = row._sum.value ?? 0;
-        if (!tot || tot <= 0) continue;
+        if (!tot || Number(tot ?? 0) <= 0) continue;
         const val = catSums[row.year] ?? 0;
-        const share = val / tot;
+        const share = Number(val ?? 0) / Number(tot ?? 0);
         await prisma.timeSeries.upsert({
           where: { universityId_metricId_year: { universityId: pseudo.id, metricId: natRaceShareMetric.id, year: row.year } },
           update: { value: share },
