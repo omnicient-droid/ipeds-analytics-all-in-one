@@ -79,7 +79,7 @@ async function main() {
       select: { id: true },
     });
 
-    const groupUniIds = allUniversities.filter((u) => inGroup(u.name, g.key)).map((u) => u.id);
+    const groupUniIds = allUniversities.filter((u) => inGroup((u.name ?? ''), g.key)).map((u) => u.id);
     if (groupUniIds.length === 0) continue;
 
     const totalByYear = await prisma.timeSeries.groupBy({
