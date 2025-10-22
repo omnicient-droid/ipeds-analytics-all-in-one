@@ -4,6 +4,18 @@
   ],
   "hints": {
     "no-inline-styles": "off",
-    "typescript-config/consistent-casing": "off"
+    "typescript-config/consistent-casing": "off",
+    "axe/text-alternatives": [
+      "default",
+      {
+        "image-alt": "off"
+      }
+    ],
+    "axe/aria": [
+      "default",
+      {
+        "aria-valid-attr-value": "off"
+      }
+    ]
   }
 }

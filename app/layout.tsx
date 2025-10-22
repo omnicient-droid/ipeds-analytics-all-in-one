@@ -1,53 +1,36 @@
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-// app/layout.tsx
-import './globals.css'
-import Link from 'next/link'
-import type { ReactNode } from 'react'
+export const dynamic = 'force-dynamic';
 
-export const metadata = {
-  title: 'Statipedia',
-  description: 'Wikipedia‑style explorer for IPEDS & College Scorecard metrics',
-}
+import './globals.css';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import ThemeProvider from '@/components/site/ThemeProvider';
+import Header from '@/components/site/Header';
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata: Metadata = {
+  title: 'Statipedia — University Analytics',
+  description: 'Compare enrollment, tuition, and outcomes for U.S. universities.',
+  metadataBase: new URL('https://your-domain.vercel.app'),
+  openGraph: {
+    title: 'Statipedia',
+    description: 'Interactive university analytics.',
+    url: 'https://your-domain.vercel.app',
+    siteName: 'Statipedia',
+    type: 'website'
+  },
+  icons: [{ rel: 'icon', url: '/favicon.svg' }],
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body>
-        {/* Flag stripes */}
-        <div className="flag-strip flag-strip--red" />
-        <div className="flag-strip flag-strip--blue" />
-
-        <header className="site-header">
-          <div className="container header-inner">
-            <Link href="/" className="brand">
-              <span className="brand-flag">★</span> Statipedia
-            </Link>
-            <nav className="top-nav" aria-label="Primary">
-              <Link href="/search" className="pill">
-                Search
-              </Link>
-              <Link href="/metrics" className="pill">
-                Metrics
-              </Link>
-              <Link href="/about" className="pill">
-                About
-              </Link>
-            </nav>
-          </div>
-        </header>
-
-        <main className="container content">{children}</main>
-
-        <footer className="site-footer">
-          <div className="container">
-            <p>
-              Content generated from IPEDS and U.S. Dept. of Education College
-              Scorecard.
-            </p>
-          </div>
-        </footer>
+    <html lang="en" suppressHydrationWarning>
+      <body className={inter.className}>
+        <ThemeProvider>
+          <Header />
+          <main className="container-bleed py-6">{children}</main>
+        </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }

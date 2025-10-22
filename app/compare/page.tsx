@@ -1,30 +1,17 @@
-// app/compare/page.tsx
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
+import dynamicImport from 'next/dynamic';
+import Link from 'next/link';
 
-import dynamicImport from 'next/dynamic'
-import Link from 'next/link'
-
-const CompareClient = dynamicImport(() => import('./Client'), { ssr: false })
+const CompareClient = dynamicImport(() => import('./Client'), { ssr: false });
 
 export default function ComparePage() {
   return (
-    <main style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
-      <header
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'baseline',
-          marginBottom: 16,
-        }}
-      >
-        <h1 style={{ fontSize: 28, fontWeight: 700 }}>Compare Universities</h1>
-        <nav>
-          <Link href="/" style={{ textDecoration: 'underline' }}>
-            Home
-          </Link>
-        </nav>
+    <main className="grid gap-4">
+      <header className="flex items-baseline justify-between">
+        <h1 className="text-2xl font-bold">Compare Universities</h1>
+        <nav><Link href="/" className="text-sm underline">Home</Link></nav>
       </header>
       <CompareClient />
     </main>
-  )
+  );
 }
