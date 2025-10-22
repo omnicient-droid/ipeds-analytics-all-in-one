@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 // app/layout.tsx
 import './globals.css'
 import Link from 'next/link'
