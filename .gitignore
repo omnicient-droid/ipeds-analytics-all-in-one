@@ -1,0 +1,23 @@
+# Node / Next.js
+node_modules/
+.next/
+.out/
+dist/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.turbo/
+.vercel/
+
+# Env & local config
+.env
+.env.*.local
+*.local
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/

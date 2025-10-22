@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model University {
+  id         Int          @id @default(autoincrement())
+  unitid     Int          @unique
+  name       String?
+  city       String?
+  state      String?
+  timeSeries TimeSeries[]
+  @@index([unitid])
+}
+
+model Metric {
+  id         Int          @id @default(autoincrement())
+  code       String       @unique
+  name       String?
+  unit       String?
+  timeSeries TimeSeries[]
+}
+
+model TimeSeries {
+  id           Int        @id @default(autoincrement())
+  universityId Int        @map("universityid")
+  metricId     Int        @map("metricid")
+  year         Int
+  value        Decimal?   @db.Decimal(20, 8)
+  university   University @relation(fields: [universityId], references: [id], onDelete: Cascade)
+  metric       Metric     @relation(fields: [metricId], references: [id], onDelete: Cascade)
+  @@unique([universityId, metricId, year])
+  @@index([metricId])
+  @@index([universityId, year])
+}

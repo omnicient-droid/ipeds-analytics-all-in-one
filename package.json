@@ -1,0 +1,88 @@
+{
+  "name": "ipeds-analytics-all-in-one",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "packageManager": "npm@10.0.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "//": "---- test placeholder (customize later) ----",
+    "postinstall": "prisma generate",
+    "typecheck": "tsc --noEmit --pretty",
+    "lint": "eslint --cache --max-warnings=0 --ext .js,.cjs,.mjs,.ts,.tsx .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "rimraf .next .turbo coverage node_modules/.cache",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio",
+    "db:push": "prisma db push",
+    "db:pull": "prisma db pull",
+    "db:migrate": "prisma migrate deploy",
+    "seed": "ts-node --transpile-only prisma/seed.ts",
+    "ingest:ef:http": "node scripts/ipeds_ef_ingest_http.mjs",
+    "ingest:ef:urban": "node scripts/ipeds_ef_ingest_urban.mjs",
+    "ingest:ef:zip": "ts-node --transpile-only scripts/ipeds_ingest_from_zip.ts",
+    "ingest:ef:dir": "ts-node --transpile-only scripts/ipeds_bulk_ingest_dir.ts",
+    "ingest:scorecard": "tsx scripts/scorecard_ingest.ts",
+    "ingest:scorecard:one": "node scripts/scorecard_ingest_one.mjs",
+    "ingest:bls": "node scripts/bls_ingest.mjs",
+    "test": "echo \"No tests specified\"",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.17.1",
+    "@supabase/supabase-js": "^2.45.0",
+    "adm-zip": "^0.5.12",
+    "chart.js": "^4.5.1",
+    "cheerio": "^1.1.2",
+    "csv-parse": "^5.6.0",
+    "fast-csv": "^5.0.1",
+    "lucide-react": "^0.546.0",
+    "next": "14.2.5",
+    "node-fetch": "^3.3.2",
+    "openai": "^6.6.0",
+    "pdf-parse": "^1.1.1",
+    "react": "18",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "18",
+    "unzipper": "^0.12.3",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.23",
+    "@types/react": "^18.3.3",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.5",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.3.3",
+    "prisma": "^6.17.1",
+    "rimraf": "^5.0.7",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  },
+  "eslintConfig": {
+    "extends": [
+      "next/core-web-vitals"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "semi": false,
+    "trailingComma": "all",
+    "printWidth": 100
+  },
+  "lint-staged": {
+    "\"*.{js,jsx,ts,tsx}\"": [
+      "eslint --cache --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "\"*.{json,md,css,scss,html}\"": "prettier --write"
+  }
+}
