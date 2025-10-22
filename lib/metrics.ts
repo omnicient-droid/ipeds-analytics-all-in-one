@@ -19,9 +19,9 @@ export type MetricDef = {
   survey: 'EF'|'E12'|'ADM'|'GR';
   category: 'enrollment'|'admissions'|'outcomes'|'prices';
   urban?: {
-    endpoint: string;            // e.g. '/ipeds/fall-enrollment'
+    endpoint: string;            // placeholder; wire to Urban API later
     filters?: Record<string, any>;
-    valueField: string;          // e.g. 'headcount' (adjust to API field)
+    valueField: string;
   };
 };
 

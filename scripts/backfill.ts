@@ -2,10 +2,9 @@ import 'dotenv/config';
 import { ingestEf } from './ingest-ipeds-ef';
 
 async function main() {
-  console.log('Starting backfill…');
+  console.log('Backfill started…');
   await ingestEf();
-  // TODO: add ingest for E12, ADM, GR here as you implement them.
-  console.log('Backfill done.');
+  // TODO: add E12/ADM/GR ingestors using same pattern.
+  console.log('Backfill complete.');
 }
-
-main().catch((e) => { console.error(e); process.exit(1); });
+main().catch(e => { console.error(e); process.exit(1); });

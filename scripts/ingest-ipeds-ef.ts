@@ -1,49 +1,60 @@
 import 'dotenv/config';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import { SCHOOLS } from '../lib/schools';
 import { METRICS, RACE_ORDER } from '../lib/metrics';
 
-// You can swap in Prisma later. For now, this just outlines the fetch loop.
+const OUT_DIR = path.join(process.cwd(), 'data', 'series');
 const URBAN_API_BASE = process.env.URBAN_API_BASE || 'https://educationdata.urban.org/api/v1/college-university/ipeds';
 
+// Minimal shape for stored series
 type Point = { year: number; value: number };
-type Series = { unitid: number; code: string; points: Point[] };
+type Stored = { unitid: number; code: string; label: string; unit: string; points: Point[]; source: string; survey: string };
 
-async function fetchEfUndergrad(unitid: number, metricCode: string): Promise<Point[]> {
-  const def = METRICS[metricCode as keyof typeof METRICS];
+async function ensureDir(p: string) { await fs.mkdir(p, { recursive: true }); }
+
+async function fetchSeries(unitid: number, code: keyof typeof METRICS): Promise<Point[]> {
+  // TODO: Replace with real Urban API request; scaffolding returns empty -> charts will gracefully show "No data"
+  // Keep the loop so the file structure is established for front-end integration.
   const from = 2010;
   const to = new Date().getFullYear();
   const points: Point[] = [];
   for (let year = from; year <= to; year++) {
-    // TODO: Call the Urban endpoint with def.urban.endpoint/filters + unitid/year.
-    // Example URL (adjust params once you finalize the API syntax):
-    // const url = `${URBAN_API_BASE}${def.urban?.endpoint}?unitid=${unitid}&year=${year}`;
+    // Example (fill in later when endpoint params are finalized):
+    // const url = `${URBAN_API_BASE}${METRICS[code].urban!.endpoint}?unitid=${unitid}&year=${year}`;
     // const res = await fetch(url);
     // const json = await res.json();
-    // const value = json?.[0]?.[def.urban!.valueField];
+    // const value = json?.[0]?.[METRICS[code].urban!.valueField];
     // if (value != null) points.push({ year, value: Number(value) });
   }
   return points;
 }
 
-export async function ingestEf() {
-  const unitids = Object.values(SCHOOLS).map(s => s.unitid);
-  const efCodes = (['EF.FALL.UG.TOTAL', ...RACE_ORDER] as const);
+async function save(unitid: number, code: keyof typeof METRICS, points: Point[]) {
+  const def = METRICS[code];
+  const stored: Stored = {
+    unitid, code,
+    label: def.label, unit: def.unit,
+    points, source: def.source, survey: def.survey
+  };
+  const file = path.join(OUT_DIR, `${code}.${unitid}.json`);
+  await fs.writeFile(file, JSON.stringify(stored, null, 2));
+  console.log(`wrote ${path.relative(process.cwd(), file)} (${points.length} pts)`);
+}
 
-  const out: Series[] = [];
+export async function ingestEf() {
+  await ensureDir(OUT_DIR);
+  const unitids = Object.values(SCHOOLS).map(s => s.unitid);
+  const efCodes = (['EF.FALL.UG.TOTAL', ...RACE_ORDER]) as (keyof typeof METRICS)[];
+
   for (const unitid of unitids) {
     for (const code of efCodes) {
-      const points = await fetchEfUndergrad(unitid, code);
-      out.push({ unitid, code, points });
-      console.log(`EF scaffold: unitid=${unitid} code=${code} points=${points.length}`);
+      const pts = await fetchSeries(unitid, code);
+      await save(unitid, code, pts);
     }
   }
-  // TODO: Upsert into your DB (Observation table) when your Prisma models are ready.
-  return out;
 }
 
 if (require.main === module) {
-  ingestEf().then(() => console.log('EF ingest scaffold complete')).catch((e) => {
-    console.error(e);
-    process.exit(1);
-  });
+  ingestEf().catch(e => { console.error(e); process.exit(1); });
 }

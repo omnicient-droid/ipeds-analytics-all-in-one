@@ -1,9 +1,8 @@
 name: Refresh IPEDS Data
 on:
   schedule:
-    - cron: "17 9 1 * *"   # monthly
+    - cron: "17 9 1 * *"   # monthly poll
   workflow_dispatch:
-
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -13,9 +12,9 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci
-      - name: Run backfill (EF etc.)
+      - name: Ingest EF (scaffold)
         run: node --loader ts-node/esm scripts/backfill.ts
-      - name: Revalidate Vercel cache (optional)
+      - name: Revalidate cache
         run: |
           if [ -n "${{ secrets.VERCEL_REVALIDATE_ENDPOINT }}" ] && [ -n "${{ secrets.REVALIDATE_SECRET }}" ]; then
             curl -sS -X POST "${{ secrets.VERCEL_REVALIDATE_ENDPOINT }}?tag=metrics&secret=${{ secrets.REVALIDATE_SECRET }}"

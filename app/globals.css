@@ -42,3 +42,15 @@
 body { @apply bg-background text-foreground; }
 .container-bleed { @apply max-w-[1200px] mx-auto px-4; }
 .card { @apply rounded-lg border bg-card text-card-foreground shadow-sm; }
+
+/* ---------- Present / Print helpers ---------- */
+body.present { background: #000; }
+body.present header, body.present nav, body.present footer, body.present [data-noprint] { display: none !important; }
+body.present main { padding: 0 !important; }
+kbd { border: 1px solid rgba(0,0,0,.2); border-bottom-width: 2px; padding: 0 .3em; border-radius: 4px; }
+
+@media print {
+  header, nav, footer, [data-noprint] { display: none !important; }
+  main { padding: 0 !important; }
+  @page { size: landscape; margin: 0.5in; }
+}
