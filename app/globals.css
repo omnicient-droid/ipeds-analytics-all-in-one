@@ -54,3 +54,10 @@ kbd { border: 1px solid rgba(0,0,0,.2); border-bottom-width: 2px; padding: 0 .3e
   main { padding: 0 !important; }
   @page { size: landscape; margin: 0.5in; }
 }
+
+/* charts */
+.recharts-default-tooltip { font-size: 12px; }
+.recharts-legend-item { cursor: pointer; }
+
+/* tabs */
+button[aria-pressed="true"] { outline: 2px solid #000; }

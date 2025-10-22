@@ -1,4 +1,5 @@
 import { SCHOOL_LIST } from '@/lib/schools';
+
 export default function Page() {
   const schools = SCHOOL_LIST;
   return (
@@ -13,5 +14,5 @@ export default function Page() {
         ))}
       </ul>
     </main>
-  );
+  )
 }
