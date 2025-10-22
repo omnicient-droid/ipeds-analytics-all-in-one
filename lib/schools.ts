@@ -1,4 +1,3 @@
-// lib/schools.ts
 export type SchoolKey = 'columbia' | 'unc' | 'harvard'
 
 export type School = {
@@ -7,17 +6,17 @@ export type School = {
   name: string
   short: string
   color: string
-  logo: string // local path under /public/logos or remote URL
+  logo: string
   logoAlt: string
 }
 
-export const SCHOOLS: Record<SchoolKey, School> = {
+export const SCHOOLS = {
   columbia: {
     key: 'columbia',
     unitid: 190150,
     name: 'Columbia University',
     short: 'Columbia',
-    color: '#1f77b4', // deep Columbia-ish blue for good contrast
+    color: '#1f77b4',
     logo: '/logos/columbia.png',
     logoAlt: 'Columbia University emblem',
   },
@@ -26,7 +25,7 @@ export const SCHOOLS: Record<SchoolKey, School> = {
     unitid: 199120,
     name: 'UNC Chapel Hill',
     short: 'UNC',
-    color: '#7BAFD4', // Tar Heel blue
+    color: '#7BAFD4',
     logo: '/logos/unc.png',
     logoAlt: 'UNC emblem',
   },
@@ -35,15 +34,15 @@ export const SCHOOLS: Record<SchoolKey, School> = {
     unitid: 166027,
     name: 'Harvard University',
     short: 'Harvard',
-    color: '#A41034', // Harvard crimson
+    color: '#A41034',
     logo: '/logos/harvard.png',
     logoAlt: 'Harvard emblem',
   },
-}
+} as const
 
-export const SCHOOL_LIST: School[] = Object.values(SCHOOLS)
+export const SCHOOL_LIST: School[] = Object.values(SCHOOLS) as any
 
 export function schoolByKey(key: string | null | undefined): School | undefined {
   if (!key) return undefined
-  return SCHOOLS[key as SchoolKey]
+  return (SCHOOLS as any)[key]
 }
