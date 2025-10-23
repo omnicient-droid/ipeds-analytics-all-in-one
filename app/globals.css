@@ -28,6 +28,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+a {
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: none;
+}
+
 /* ---------- Glassmorphism Cards ---------- */
 .glass-card {
   border-radius: 0.5rem;
