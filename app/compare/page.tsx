@@ -1,14 +1,12 @@
+import nextDynamic from 'next/dynamic' // alias to avoid name clash with exported 'dynamic'
 export const dynamic = 'force-dynamic'
-import dynamicImport from 'next/dynamic'
-import Link from 'next/link'
-const CompareClient = dynamicImport(() => import('./Client'), { ssr:false, loading: () => <p>Loading…</p> })
-export default function ComparePage() {
+
+const CompareClient = nextDynamic(() => import('./Client'), { ssr: false })
+
+export default function Page() {
   return (
-    <main style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
-      <header style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700 }}>Compare Universities</h1>
-        <nav><Link href="/" style={{ textDecoration: 'underline' }}>Home</Link></nav>
-      </header>
+    <main className="mx-auto max-w-6xl px-4 py-6">
+      <h1 className="text-2xl font-semibold mb-4">Compare Universities</h1>
       <CompareClient />
     </main>
   )

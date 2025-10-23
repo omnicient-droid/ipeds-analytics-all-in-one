@@ -131,7 +131,7 @@ async function handleIngest(
     const unit = meta?.unit ?? 'value'
     const metric = await upsertMetric(code, name, unit)
 
-    for (const row of annualRows(ser)) {
+    for (const row of Array.from(annualRows(ser))) {
       await writePoint(us.id, metric.id, row.year, row.value)
       wrote++
     }

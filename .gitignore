@@ -22,3 +22,11 @@ yarn-error.log*
 Thumbs.db
 .vscode/
 tsconfig.tsbuildinfo
+
+# Never commit UI under /app/api
+app/api/**/*.tsx
+app/api/**/*.jsx
+
+# Never commit UI under /app/api
+app/api/**/*.tsx
+app/api/**/*.jsx

@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["*"]
-    }
-  }
+    "paths": { "@/*": ["./*"] },
+    "checkJs": false
+  },
+  "include": ["app", "components", "lib", "types", "next-env.d.ts"]
 }

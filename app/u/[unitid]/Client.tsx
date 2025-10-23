@@ -8,30 +8,6 @@ const EF_RACES = ['EF.FALL.UG.WHITE','EF.FALL.UG.BLACK','EF.FALL.UG.HISP','EF.FA
 const ADM = ['ADM.ADM_RATE','ADM.YIELD'];
 const GR  = ['GR.GR150.TOTAL'];
 
-function computeInsights(raceSeries: Record<string, APISeries>) {
-  const span = 10;
-  const bullets: string[] = [];
-  try{
-    const deltas = Object.entries(raceSeries).map(([k,s])=>{
-      const pts = s.points.sort((a,b)=>a.year-b.year);
-      const endY = pts[pts.length-1]?.year;
-      const from = pts.find(p=>p.year===(endY-span)) ?? pts[0];
-      const to   = pts[pts.length-1];
-      const d = (to?.value??0) - (from?.value??0);
-      return { k, d };
-    }).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
-    const top = deltas[0];
-    if (top) bullets.push(`${pretty(top.k)} changed the most over ~decade: ${top.d>0?'+':''}${top.d.toFixed(1)} pts.`);
-    const recentDip = Object.entries(raceSeries).map(([k,s])=>{
-      const last = s.points.slice(-2);
-      const d = (last[1]?.value??0) - (last[0]?.value??0);
-      return {k,d};
-    }).sort((a,b)=>a.d-b.d)[0];
-    if (recentDip) bullets.push(`${pretty(recentDip.k)} had the largest latest YoY move: ${(recentDip.d>0?'+':'')+recentDip.d.toFixed(1)} pts.`);
-  } catch {}
-  return bullets;
-}
-
 function pretty(code: string){
   const map: Record<string,string> = {
     'EF.FALL.UG.WHITE':'White','EF.FALL.UG.BLACK':'Black','EF.FALL.UG.HISP':'Hispanic/Latino',
@@ -42,8 +18,26 @@ function pretty(code: string){
   return map[code] ?? code;
 }
 
+function computeInsights(raceSeries: Record<string, APISeries>) {
+  const bullets: string[] = [];
+  try{
+    const deltas = Object.entries(raceSeries).map(([k,s])=>{
+      const pts = s.points.sort((a,b)=>a.year-b.year);
+      if (!pts.length) return {k, d:0};
+      const from = pts[0], to = pts[pts.length-1];
+      const d = (to?.value??0) - (from?.value??0);
+      return { k, d };
+    }).sort((a,b)=>Math.abs(b.d)-Math.abs(a.d));
+    const top = deltas[0];
+    if (top) bullets.push(`${pretty(top.k)} changed the most across the available window: ${top.d>0?'+':''}${top.d.toFixed(1)} pts.`);
+  } catch {}
+  return bullets;
+}
+
 export default function Client({ unitid }: { unitid: number }) {
   const school = Object.values(SCHOOLS).find(s=>s.unitid===unitid);
+  const star = (school as any)?.isCommunityCollege ? ' *' : '';
+
   const [tab, setTab] = useState<'race'|'adm'|'out'>('race');
   const [transform, setTransform] = useState<TransformKind>('level');
   const [forecast, setForecast] = useState(3);
@@ -72,7 +66,7 @@ export default function Client({ unitid }: { unitid: number }) {
     <div className="mx-auto max-w-6xl px-4 py-6">
       <header className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">
-          {school?.name ?? `UNITID ${unitid}`} {school?.isCommunityCollege ? <span title="Community College">*</span> : null}
+          {(school?.name ?? `UNITID ${unitid}`)}{star}
         </h1>
         <nav className="flex gap-2 text-sm">
           <button onClick={()=>setTab('race')} className={`px-3 py-1 rounded ${tab==='race'?'bg-black text-white':'bg-gray-100'}`}>Race</button>
@@ -88,7 +82,9 @@ export default function Client({ unitid }: { unitid: number }) {
           {tab==='race' && (
             <>
               <ChartControls transform={transform} setTransform={setTransform} forecast={forecast} setForecast={setForecast} smooth={smooth} setSmooth={setSmooth}/>
-              <div className="mt-2"><StackedArea100 byCategory={raceMap} /></div>
+              <div className="mt-2">
+                <StackedArea100 byCategory={raceMap} />
+              </div>
               {!!insights.length && (
                 <div className="mt-4 bg-amber-50 border border-amber-200 rounded p-3 text-sm">
                   <b>Insights</b>

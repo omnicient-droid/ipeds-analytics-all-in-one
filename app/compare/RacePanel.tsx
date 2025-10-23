@@ -1,163 +1,54 @@
-'use client'
+'use client';
 
-import { useMemo, useState, useEffect } from 'react'
-import useSWR from 'swr'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { SCHOOLS, SchoolKey } from '@/lib/schools'
-import { applyTransform, type TransformKey } from '@/lib/transforms'
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from 'recharts'
-import { RACE_METRICS } from '@/lib/raceMetrics'
+import * as React from 'react';
+import { fetchSeries, type APISeries } from '@/lib/series';
+import { LineChartInteractive } from '@/components/Chart';
+import TransformControls, { type TransformKind } from '@/components/TransformControls';
+import { SCHOOL_LIST } from '@/lib/schools';
 
-const fetcher = (u: string) => fetch(u).then((r) => r.json())
-
-function wide(series: any[], selected: SchoolKey[]) {
-  const map: Record<string, Record<number, number>> = {}
-  for (const s of series) {
-    map[s.unitid] = {}
-    for (const p of s.data) map[s.unitid][p.year] = p.value
-  }
-  const years = new Set<number>()
-  series.forEach((s) => s.data.forEach((p: any) => years.add(p.year)))
-  const y = [...years].sort((a, b) => a - b)
-  const keyToUnitid = (k: SchoolKey) => String(SCHOOLS[k].unitid)
-  return y.map((year) => {
-    const row: any = { year }
-    for (const k of selected) row[`s_${k}`] = map[keyToUnitid(k)]?.[year] ?? null
-    return row
-  })
-}
+const UNITIDS = [190150, 199120, 166027];
+const RACE_CODES = [
+  'EF.FALL.UG.WHITE','EF.FALL.UG.BLACK','EF.FALL.UG.HISP','EF.FALL.UG.ASIAN',
+  'EF.FALL.UG.TWOORMORE','EF.FALL.UG.NONRES','EF.FALL.UG.UNKNOWN'
+] as const;
 
 export default function RacePanel() {
-  const router = useRouter()
-  const params = useSearchParams()
-  const initSchools = (params.get('schools') || 'columbia,unc,harvard')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean) as SchoolKey[]
-  const initCode = params.get('race') || 'EF.EFYBLACK'
-  const initTf = (params.get('tf') || 'none') as TransformKey
+  const [transform, setTransform] = React.useState<TransformKind>('yoy');
+  const [forecast, setForecast]   = React.useState<number>(5);
+  const [smooth, setSmooth]       = React.useState<boolean>(true);
 
-  const [schools, setSchools] = useState<SchoolKey[]>(Array.from(new Set(initSchools)).slice(0, 3))
-  const [code, setCode] = useState(initCode)
-  const [tf, setTf] = useState<TransformKey>(initTf)
+  const [series, setSeries]       = React.useState<APISeries[]>([]);
+  const [loading, setLoading]     = React.useState<boolean>(true);
+  const [error, setError]         = React.useState<string | null>(null);
 
-  useEffect(() => {
-    const qs = new URLSearchParams()
-    qs.set('schools', schools.join(','))
-    qs.set('race', code)
-    qs.set('tf', tf)
-    router.replace(`/compare?${qs.toString()}`)
-  }, [schools, code, tf, router])
-
-  const unitidsCsv = schools.map((k) => SCHOOLS[k].unitid).join(',')
-  const { data, error, isLoading } = useSWR<any>(
-    `/api/ef?code=${encodeURIComponent(code)}&unitids=${unitidsCsv}`,
-    fetcher,
-  )
-
-  const chartData = useMemo(() => {
-    if (!data) return []
-    const transformed = data.series.map((s: any) => ({
-      unitid: s.unitid,
-      data: applyTransform(s.data, tf),
-    }))
-    return wide(transformed, schools)
-  }, [data, schools, tf])
+  React.useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true); setError(null);
+        const s = await fetchSeries([...RACE_CODES], UNITIDS, { from: 2010, to: new Date().getFullYear() });
+        const colored = s.map(r => {
+          const sch = SCHOOL_LIST.find(x => x.unitid === r.unitid);
+          return { ...r, color: sch?.color, label: sch?.short ?? String(r.unitid) };
+        });
+        setSeries(colored);
+      } catch (e:any) { setError(String(e?.message||e)); }
+      finally { setLoading(false); }
+    })();
+  }, []);
 
   return (
-    <section className="grid gap-4">
-      {/* controls */}
-      <div className="card p-3 flex flex-wrap items-center gap-3">
-        <div className="font-semibold">Race:</div>
-        <select
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          className="rounded border px-2 py-1 text-sm"
-        >
-          {RACE_METRICS.map((m) => (
-            <option key={m.code} value={m.code}>
-              {m.label}
-            </option>
-          ))}
-        </select>
+    <section className="space-y-4">
+      <p className="text-sm">Interactive charts • toggle transform, smoothing, and forecasts.</p>
 
-        <div className="font-semibold ml-4">Transform:</div>
-        <select
-          value={tf}
-          onChange={(e) => setTf(e.target.value as any)}
-          className="rounded border px-2 py-1 text-sm"
-        >
-          <option value="none">None</option>
-          <option value="yoy_pct">YoY %</option>
-          <option value="diff">YoY Δ</option>
-          <option value="index100">Index (first=100)</option>
-          <option value="cum">Cumulative (∫)</option>
-          <option value="log10">log10</option>
-        </select>
+      <TransformControls
+        transform={transform} setTransform={setTransform}
+        forecast={forecast}   setForecast={setForecast}
+        smooth={smooth}       setSmooth={setSmooth}
+      />
 
-        <div className="ml-auto text-sm opacity-70">
-          {data?.metric?.name} • {data?.metric?.unit}
-        </div>
-      </div>
-
-      {/* chart */}
-      <div className="card p-3">
-        <div style={{ width: '100%', height: 440 }}>
-          {error && <div className="p-3 text-red-600">Failed to load.</div>}
-          {isLoading && <div className="p-3">Loading…</div>}
-          {!isLoading && !error && (
-            <ResponsiveContainer>
-              <LineChart data={chartData} margin={{ top: 16, right: 16, left: 0, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="year" />
-                <YAxis />
-                <Tooltip formatter={(v: any) => (typeof v === 'number' ? v.toLocaleString() : v)} />
-                <Legend />
-                {schools.includes('columbia') && (
-                  <Line
-                    type="monotone"
-                    name="Columbia"
-                    dataKey="s_columbia"
-                    stroke={SCHOOLS.columbia.color}
-                    strokeWidth={3}
-                  />
-                )}
-                {schools.includes('unc') && (
-                  <Line
-                    type="monotone"
-                    name="UNC"
-                    dataKey="s_unc"
-                    stroke={SCHOOLS.unc.color}
-                    strokeWidth={3}
-                  />
-                )}
-                {schools.includes('harvard') && (
-                  <Line
-                    type="monotone"
-                    name="Harvard"
-                    dataKey="s_harvard"
-                    stroke={SCHOOLS.harvard.color}
-                    strokeWidth={3}
-                  />
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Tip: switch race + transform; URL updates so you can share. Add more schools as you ingest
-        EF.
-      </p>
+      {error && <div className="text-red-600 text-sm">Error: {error}</div>}
+      {loading ? <div className="mt-4">Loading…</div>
+               : <LineChartInteractive series={series} transform={transform} forecast={forecast} smooth={smooth} />}
     </section>
-  )
+  );
 }
