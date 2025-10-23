@@ -48,34 +48,39 @@ export function ChartControls(p: {
   setSmooth: (b: boolean) => void
 }) {
   return (
-    <div className="flex flex-wrap gap-3 my-3 text-sm text-gray-300">
-      <label className="flex items-center gap-2">
-        Transform:
+    <div className="flex flex-wrap gap-4 my-4 text-sm">
+      <label className="flex items-center gap-2 text-gray-300 font-medium">
+        <span className="text-blue-400">Transform:</span>
         <select
           value={p.transform}
           onChange={(e) => p.setTransform(e.target.value as TransformKind)}
-          className="border border-gray-600 rounded px-2 py-1 bg-gray-800 text-gray-200"
+          className="border border-blue-500/30 rounded-lg px-3 py-2 bg-gray-800/90 text-gray-200 hover:border-blue-500/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer shadow-md"
         >
           <option value="level">Level</option>
           <option value="yoy">YoY %</option>
           <option value="index">Index (2015=100)</option>
         </select>
       </label>
-      <label className="flex items-center gap-2">
-        Forecast:
+      <label className="flex items-center gap-2 text-gray-300 font-medium">
+        <span className="text-purple-400">Forecast:</span>
         <select
           value={p.forecast}
           onChange={(e) => p.setForecast(parseInt(e.target.value))}
-          className="border border-gray-600 rounded px-2 py-1 bg-gray-800 text-gray-200"
+          className="border border-purple-500/30 rounded-lg px-3 py-2 bg-gray-800/90 text-gray-200 hover:border-purple-500/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500/50 cursor-pointer shadow-md"
         >
           <option value="0">Off</option>
           <option value="3">3y</option>
           <option value="5">5y</option>
         </select>
       </label>
-      <label className="flex items-center gap-2">
-        <input type="checkbox" checked={p.smooth} onChange={(e) => p.setSmooth(e.target.checked)} />
-        Smooth (3-yr)
+      <label className="flex items-center gap-2 text-gray-300 font-medium cursor-pointer hover:text-white transition-colors duration-200">
+        <input 
+          type="checkbox" 
+          checked={p.smooth} 
+          onChange={(e) => p.setSmooth(e.target.checked)} 
+          className="w-4 h-4 rounded border-green-500/30 bg-gray-800 text-green-500 focus:ring-2 focus:ring-green-500/50 cursor-pointer"
+        />
+        <span className="text-green-400">Smooth (3-yr)</span>
       </label>
     </div>
   )
@@ -188,10 +193,10 @@ export function LineChartInteractive({
   return (
     <div className="chart-fade-in">
       <ResponsiveContainer width="100%" height={420}>
-        <LineChart data={data} margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="year" />
-          <YAxis domain={yDomain as any} tickFormatter={tickFmt} />
+        <LineChart data={data} margin={{ top: 10, right: 28, left: 10, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(59, 130, 246, 0.15)" />
+          <XAxis dataKey="year" tick={{ fill: '#cbd5e1' }} tickLine={false} axisLine={{ stroke: 'rgba(59, 130, 246, 0.2)' }} />
+          <YAxis domain={yDomain as any} tickFormatter={tickFmt} tick={{ fill: '#cbd5e1' }} tickLine={false} axisLine={{ stroke: 'rgba(59, 130, 246, 0.2)' }} />
           <Tooltip
             formatter={(v: any) =>
               typeof v === 'number'
@@ -201,18 +206,20 @@ export function LineChartInteractive({
                 : v
             }
           />
-          <Legend />
+          <Legend wrapperStyle={{ color: '#e5e7eb' }} />
           {processed.map((s) => (
             <Line
               key={s.__name}
               type="monotone"
               dataKey={s.__name}
               stroke={s.__color}
-              strokeWidth={2}
+              strokeWidth={2.25}
               dot={false}
               isAnimationActive={true}
               animationDuration={800}
               animationEasing="ease-in-out"
+              strokeOpacity={0.95}
+              activeDot={{ r: 4, strokeWidth: 0 }}
             />
           ))}
           <Brush dataKey="year" height={18} />

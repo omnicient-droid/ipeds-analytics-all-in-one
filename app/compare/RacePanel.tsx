@@ -103,14 +103,14 @@ export default function RacePanel() {
   }, [demoMode])
 
   return (
-    <section className="space-y-4">
-      <div className="glass-card p-4">
+    <section className="space-y-6">
+      <div className="glass-card-hover p-6 chart-fade-in">
         <p className="text-sm text-gray-300">
           Interactive charts • toggle transform, smoothing, and forecasts.
         </p>
       </div>
 
-      <div className="glass-card p-4">
+  <div className="glass-card-hover p-6 chart-fade-in" style={{ animationDelay: '0.1s' }}>
         <TransformControls
           transform={transform}
           setTransform={setTransform}
@@ -122,12 +122,12 @@ export default function RacePanel() {
       </div>
 
       {error && (
-        <div className="glass-card border border-red-500/30 p-4 text-sm text-red-200">
+  <div className="glass-card-hover border-2 border-red-500/50 p-6 text-sm text-red-200 chart-fade-in glow-pulse" style={{ animationDelay: '0.2s' }}>
           <div className="flex items-center justify-between">
             <div>Error loading data: {error}</div>
             <div className="flex gap-2">
               <button
-                className="rounded bg-blue-600 px-3 py-1 hover:bg-blue-500"
+                className="rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-2 font-medium hover:from-blue-500 hover:to-blue-400 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
                 onClick={() => {
                   setDemoMode(false)
                   setLoading(true)
@@ -137,7 +137,7 @@ export default function RacePanel() {
                 Retry
               </button>
               <button
-                className="rounded bg-purple-600 px-3 py-1 hover:bg-purple-500"
+                className="rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 px-4 py-2 font-medium hover:from-purple-500 hover:to-purple-400 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
                 onClick={() => {
                   setDemoMode(true)
                   setSeries(buildDemoSeries())
@@ -150,17 +150,18 @@ export default function RacePanel() {
         </div>
       )}
       {loading ? (
-        <div className="glass-card mt-4 p-6">
-          <div className="chart-skeleton mb-4 h-6 w-48 rounded" />
-          <div className="chart-skeleton h-64 rounded" />
+        <div className="glass-card-hover mt-4 p-8 chart-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div className="chart-skeleton mb-6 h-8 w-56 rounded-lg" />
+          <div className="chart-skeleton h-80 rounded-xl" />
         </div>
       ) : series.length === 0 ? (
-        <div className="glass-card p-6 text-center text-gray-400">
+  <div className="glass-card-hover p-8 text-center text-gray-400 chart-fade-in" style={{ animationDelay: '0.2s' }}>
           No data available. Click &quot;Use demo data&quot; to see a preview.
         </div>
       ) : (
-        <div className="glass-card p-6">
-          <div className="text-xs text-gray-400 mb-4">
+        <div className="glass-card-hover p-8 chart-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div className="text-sm text-gray-400 mb-6 flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
             Rendering {series.length} series
           </div>
           <LineChartInteractive

@@ -25,23 +25,9 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#0b132b] via-[#1c2541] to-[#2b2d42] text-white">
-      {/* Top Nav */}
-      <header className="mx-auto max-w-6xl px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="text-xl font-extrabold tracking-wide">
-          <span className="text-[#ef233c]">Stati</span><span className="text-white">pedia</span>
-        </Link>
-        <nav className="flex items-center gap-3">
-          <Link href="/compare" className="px-4 py-2 rounded-lg border border-white/15 bg-white/5 hover:bg-white/10 transition">
-            Compare
-          </Link>
-          <Link href="/u/190150" className="px-4 py-2 rounded-lg bg-[#ef233c] hover:bg-[#d90429] transition shadow">
-            Sample Profile
-          </Link>
-        </nav>
-      </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-4 pt-8 pb-16">
+      <section className="container-bleed pt-8 pb-16">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div>
             <h1 className="text-4xl md:text-5xl font-extrabold leading-tight">
@@ -87,7 +73,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="mx-auto max-w-6xl px-4 py-8 text-xs text-white/55">
+      <footer className="container-bleed py-8 text-xs text-white/55">
         © {new Date().getFullYear()} Statipedia • Built with Next.js + Tailwind
       </footer>
     </main>
