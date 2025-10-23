@@ -18,7 +18,7 @@ const RACE_CODES = [
 ] as const
 
 export default function RacePanel() {
-  const [transform, setTransform] = React.useState<TransformKind>('yoy')
+  const [transform, setTransform] = React.useState<TransformKind>('level')
   const [forecast, setForecast] = React.useState<number>(5)
   const [smooth, setSmooth] = React.useState<boolean>(true)
 
@@ -83,7 +83,11 @@ export default function RacePanel() {
         console.log('Fetched series from API:', s)
         const colored = s.map((r) => {
           const sch = SCHOOL_LIST.find((x) => x.unitid === r.unitid)
-          return { ...r, color: sch?.color, label: sch?.short ?? String(r.unitid) }
+          // Keep series labels unique by including both school and race
+          const race = r.code.split('.').slice(-1)[0]
+          const school = sch?.short ?? String(r.unitid)
+          const label = `${school} — ${race}`
+          return { ...r, color: sch?.color, label }
         })
         console.log('Colored series:', colored)
         setSeries(colored)
