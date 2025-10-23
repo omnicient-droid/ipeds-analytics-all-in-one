@@ -9,6 +9,7 @@ import { NATIONAL_BENCHMARKS } from '@/lib/benchmarks'
 import { friendlyLabelFromCode } from '@/lib/labels'
 import { useToast } from '@/components/ToastProvider'
 import type { TransformKind } from '@/components/TransformControls'
+import { countyFipsForUnit } from '@/lib/place'
 
 interface SchoolProfileProps {
   unitid: number
@@ -65,6 +66,7 @@ export default function SchoolProfile({
   const [financeSeries, setFinanceSeries] = React.useState<APISeries[]>([])
   const [facultySeries, setFacultySeries] = React.useState<APISeries[]>([])
   const [facultyRaceSeries, setFacultyRaceSeries] = React.useState<APISeries[]>([])
+  const [placeSeries, setPlaceSeries] = React.useState<APISeries[]>([])
   const [loading, setLoading] = React.useState(true)
   const toast = useToast()
 
@@ -131,6 +133,25 @@ export default function SchoolProfile({
         setFinanceSeries(finance)
         setFacultySeries(faculty)
         setFacultyRaceSeries(facultyRace)
+
+        // Place context (county FIPS mapping → try to fetch HE.LE.COUNTY.{FIPS} and BLS.UNRATE.COUNTY.{FIPS})
+        try {
+          const fips = countyFipsForUnit(unitid)
+          if (fips) {
+            const codes = [`HE.LE.COUNTY.${fips}`, `BLS.UNRATE.COUNTY.${fips}`]
+            const place = await fetchSeries(
+              codes as any,
+              [unitid],
+              { from: 2000, to: new Date().getFullYear() },
+              { retries: 1, timeoutMs: 12000 },
+            )
+            setPlaceSeries(place)
+          } else {
+            setPlaceSeries([])
+          }
+        } catch {
+          setPlaceSeries([])
+        }
 
         const totalMetrics =
           enrollment.length +
@@ -271,6 +292,29 @@ export default function SchoolProfile({
     return byRace
   }, [facultyRaceSeries])
 
+  // Helper: change summary for any series list
+  function buildChangeSummary(
+    series: APISeries[],
+  ): {
+    code: string
+    label: string
+    abs: number | null
+    pct: number | null
+    factor: number | null
+  }[] {
+    return series.map((s) => {
+      const pts = s.points.filter((p) => p.value != null).sort((a, b) => a.year - b.year)
+      if (pts.length < 2)
+        return { code: s.code, label: s.label || s.code, abs: null, pct: null, factor: null }
+      const first = pts[0].value as number
+      const last = pts[pts.length - 1].value as number
+      const abs = last - first
+      const factor = first !== 0 ? last / first : null
+      const pct = first !== 0 ? ((last - first) / first) * 100 : null
+      return { code: s.code, label: s.label || s.code, abs, pct, factor }
+    })
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -345,6 +389,25 @@ export default function SchoolProfile({
             forecast={2}
             smooth={true}
           />
+          {/* Change summary */}
+          <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
+            <div className="mb-2 font-semibold text-gray-200">Change over the window</div>
+            <div className="grid gap-2 md:grid-cols-3">
+              {buildChangeSummary(admissionsSeries).map((row) => (
+                <div key={row.code} className="flex items-center justify-between gap-3">
+                  <span>{row.label}</span>
+                  <span className="tabular-nums">
+                    {row.abs != null ? row.abs.toLocaleString() : '—'} |{' '}
+                    {row.pct != null ? `${row.pct.toFixed(1)}%` : '—'} |{' '}
+                    {row.factor != null ? `${row.factor.toFixed(2)}×` : '—'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-1 text-xs text-gray-400">
+              Shown as: absolute | percent | factor (last ÷ first).
+            </div>
+          </div>
         </motion.div>
       )}
 
@@ -394,6 +457,33 @@ export default function SchoolProfile({
             Faculty by Race/Ethnicity
           </h3>
           <StackedArea100 byCategory={facultyByRace} />
+        </motion.div>
+      )}
+
+      {/* Place Context: County Life Expectancy vs Unemployment (if ingested) */}
+      {placeSeries.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="glass-card-hover p-8"
+        >
+          <h3 className="mb-6 bg-gradient-to-r from-emerald-400 to-sky-400 bg-clip-text text-2xl font-bold text-transparent">
+            Place Context: County Life Expectancy and Unemployment
+          </h3>
+          <LineChartInteractive
+            series={placeSeries.map((s) => ({
+              ...s,
+              label: friendlyLabelFromCode(s.code, s.label),
+            }))}
+            transform="level"
+            forecast={0}
+            smooth={true}
+          />
+          <p className="mt-2 text-xs text-gray-400">
+            County-level time series help contextualize institutional patterns with local health and
+            labor market conditions. These are descriptive trends and do not imply causality.
+          </p>
         </motion.div>
       )}
 
@@ -486,6 +576,27 @@ export default function SchoolProfile({
             forecast={3}
             smooth={false}
           />
+          {/* Change summary */}
+          <div className="mt-4 rounded-lg border border-white/10 bg-black/20 p-4 text-sm text-gray-300">
+            <div className="mb-2 font-semibold text-gray-200">Change over the window</div>
+            <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+              {buildChangeSummary(enrollmentSeries.filter((s) => !s.code.includes('TOTAL'))).map(
+                (row) => (
+                  <div key={row.code} className="flex items-center justify-between gap-3">
+                    <span>{row.label}</span>
+                    <span className="tabular-nums">
+                      {row.abs != null ? row.abs.toLocaleString() : '—'} |{' '}
+                      {row.pct != null ? `${row.pct.toFixed(1)}%` : '—'} |{' '}
+                      {row.factor != null ? `${row.factor.toFixed(2)}×` : '—'}
+                    </span>
+                  </div>
+                ),
+              )}
+            </div>
+            <div className="mt-1 text-xs text-gray-400">
+              Shown as: absolute | percent | factor (last ÷ first).
+            </div>
+          </div>
         </motion.div>
       )}
 

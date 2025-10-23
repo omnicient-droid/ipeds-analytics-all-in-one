@@ -16,10 +16,11 @@ import {
 } from 'recharts'
 import type { APISeries } from '@/lib/series'
 import { yoy, index, movingAvg, toShares, type Point } from '@/lib/transform'
+import { toDiff, toCum } from '@/lib/transforms'
 import { linForecast } from '@/lib/forecast'
 import ChartSkeleton from './ChartSkeleton'
 
-export type TransformKind = 'level' | 'yoy' | 'index'
+export type TransformKind = 'level' | 'yoy' | 'index' | 'factor'
 const PALETTE = [
   '#3b82f6', // blue
   '#8b5cf6', // purple
@@ -60,6 +61,7 @@ export function ChartControls(p: {
           <option value="level">Level</option>
           <option value="yoy">YoY %</option>
           <option value="index">Index (2015=100)</option>
+          <option value="factor">Factor (base=1)</option>
         </select>
       </label>
       <label className="flex items-center gap-2 font-medium text-gray-300">
@@ -101,10 +103,18 @@ function applyTransform(points: Point[], kind: TransformKind): Point[] {
     }
     return out
   }
+  if (kind === 'index') {
+    const base = points.find((p) => p.value != null)?.value ?? null
+    return points.map((p) => ({
+      year: p.year,
+      value: base && p.value != null ? (p.value / base) * 100 : null,
+    }))
+  }
+  // factor: ratio to first non-null value (base=1 at start)
   const base = points.find((p) => p.value != null)?.value ?? null
   return points.map((p) => ({
     year: p.year,
-    value: base && p.value != null ? (p.value / base) * 100 : null,
+    value: base && p.value != null ? p.value / base : null,
   }))
 }
 function extent(s: { points: Point[] }[]) {
@@ -135,6 +145,11 @@ export function LineChartInteractive({
   forecast: number
   smooth: boolean
 }) {
+  // Overlay toggles (local). Derivative (Δ), Acceleration (Δ²), Integral (Σ), Growth (Δlog).
+  const [showDiff, setShowDiff] = useState(false)
+  const [showAccel, setShowAccel] = useState(false)
+  const [showCum, setShowCum] = useState(false)
+  const [showGrowth, setShowGrowth] = useState(false)
   const mounted = useMounted()
   const [hoveredSeries, setHoveredSeries] = useState<string | null>(null)
   const [activeYear, setActiveYear] = useState<number | null>(null)
@@ -255,6 +270,36 @@ export function LineChartInteractive({
 
   return (
     <div className="chart-fade-in">
+      <div className="mb-2 flex flex-wrap items-center justify-end gap-2 text-xs text-gray-300">
+        <label className="inline-flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={showDiff}
+            onChange={(e) => setShowDiff(e.target.checked)}
+          />
+          Δ (Derivative)
+        </label>
+        <label className="inline-flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={showAccel}
+            onChange={(e) => setShowAccel(e.target.checked)}
+          />
+          Δ² (Acceleration)
+        </label>
+        <label className="inline-flex items-center gap-1">
+          <input type="checkbox" checked={showCum} onChange={(e) => setShowCum(e.target.checked)} />
+          Σ (Integral)
+        </label>
+        <label className="inline-flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={showGrowth}
+            onChange={(e) => setShowGrowth(e.target.checked)}
+          />
+          Growth (Δlog)
+        </label>
+      </div>
       <ResponsiveContainer width="100%" height={420}>
         <LineChart
           data={data}
@@ -306,6 +351,85 @@ export function LineChartInteractive({
               onMouseLeave={() => setHoveredSeries(null)}
             />
           ))}
+
+          {/* Overlay lines computed from LEVEL data to provide consistent interpretation */}
+          {processed.map((s, i) => {
+            // Reconstruct level series from original series (before transform forecasting). We have only transformed points here.
+            // Approximate by using the original points from input series.
+            const levelPts = series[i]?.points?.slice().sort((a, b) => a.year - b.year) || []
+            const diff = showDiff ? toDiff(levelPts as any) : null
+            const accel = showAccel && diff ? toDiff(diff as any) : null
+            const cum = showCum ? toCum(levelPts as any) : null
+            const growth = showGrowth
+              ? toDiff(
+                  levelPts.map((p) => ({
+                    year: p.year,
+                    value: p.value && p.value > 0 ? Math.log(p.value as number) : null,
+                  })) as any,
+                )
+              : null
+            const mkColor = (hex: string) => hex + 'AA'
+            return (
+              <g key={s.__name + ':overlays'}>
+                {showDiff && (
+                  <Line
+                    type="monotone"
+                    dataKey={`${s.__name} Δ`}
+                    data={years.map((y) => ({
+                      year: y,
+                      [`${s.__name} Δ`]: diff?.find((p) => p.year === y)?.value ?? null,
+                    }))}
+                    stroke={mkColor(s.__color)}
+                    strokeDasharray="4 3"
+                    dot={false}
+                    strokeWidth={1.5}
+                  />
+                )}
+                {showAccel && (
+                  <Line
+                    type="monotone"
+                    dataKey={`${s.__name} Δ²`}
+                    data={years.map((y) => ({
+                      year: y,
+                      [`${s.__name} Δ²`]: accel?.find((p) => p.year === y)?.value ?? null,
+                    }))}
+                    stroke={mkColor(s.__color)}
+                    strokeDasharray="2 3"
+                    dot={false}
+                    strokeWidth={1.2}
+                  />
+                )}
+                {showCum && (
+                  <Line
+                    type="monotone"
+                    dataKey={`${s.__name} Σ`}
+                    data={years.map((y) => ({
+                      year: y,
+                      [`${s.__name} Σ`]: cum?.find((p) => p.year === y)?.value ?? null,
+                    }))}
+                    stroke={mkColor(s.__color)}
+                    strokeDasharray="6 4"
+                    dot={false}
+                    strokeWidth={1.2}
+                  />
+                )}
+                {showGrowth && (
+                  <Line
+                    type="monotone"
+                    dataKey={`${s.__name} Δlog`}
+                    data={years.map((y) => ({
+                      year: y,
+                      [`${s.__name} Δlog`]: growth?.find((p) => p.year === y)?.value ?? null,
+                    }))}
+                    stroke={mkColor(s.__color)}
+                    strokeDasharray="1 3"
+                    dot={false}
+                    strokeWidth={1.2}
+                  />
+                )}
+              </g>
+            )
+          })}
           <Brush dataKey="year" height={18} />
         </LineChart>
       </ResponsiveContainer>

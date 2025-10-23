@@ -25,6 +25,12 @@ export default function MascotSplash({ unitid, durationMs = 2200 }: Props) {
     // If reduced motion, skip the splash entirely
     if (reduceMotion) return
 
+    // Show only once per session
+    try {
+      if (sessionStorage.getItem('mascotSplashSeen') === '1') return
+      sessionStorage.setItem('mascotSplashSeen', '1')
+    } catch {}
+
     let cancelled = false
     setVisible(true)
 
