@@ -48,13 +48,13 @@ export function ChartControls(p: {
   setSmooth: (b: boolean) => void
 }) {
   return (
-    <div className="flex flex-wrap gap-3 my-3 text-sm">
+    <div className="flex flex-wrap gap-3 my-3 text-sm text-gray-300">
       <label className="flex items-center gap-2">
         Transform:
         <select
           value={p.transform}
           onChange={(e) => p.setTransform(e.target.value as TransformKind)}
-          className="border rounded px-2 py-1"
+          className="border border-gray-600 rounded px-2 py-1 bg-gray-800 text-gray-200"
         >
           <option value="level">Level</option>
           <option value="yoy">YoY %</option>
@@ -66,7 +66,7 @@ export function ChartControls(p: {
         <select
           value={p.forecast}
           onChange={(e) => p.setForecast(parseInt(e.target.value))}
-          className="border rounded px-2 py-1"
+          className="border border-gray-600 rounded px-2 py-1 bg-gray-800 text-gray-200"
         >
           <option value="0">Off</option>
           <option value="3">3y</option>

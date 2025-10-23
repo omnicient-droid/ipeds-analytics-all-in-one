@@ -104,16 +104,22 @@ export default function RacePanel() {
 
   return (
     <section className="space-y-4">
-      <p className="text-sm">Interactive charts • toggle transform, smoothing, and forecasts.</p>
+      <div className="glass-card p-4">
+        <p className="text-sm text-gray-300">
+          Interactive charts • toggle transform, smoothing, and forecasts.
+        </p>
+      </div>
 
-      <TransformControls
-        transform={transform}
-        setTransform={setTransform}
-        forecast={forecast}
-        setForecast={setForecast}
-        smooth={smooth}
-        setSmooth={setSmooth}
-      />
+      <div className="glass-card p-4">
+        <TransformControls
+          transform={transform}
+          setTransform={setTransform}
+          forecast={forecast}
+          setForecast={setForecast}
+          smooth={smooth}
+          setSmooth={setSmooth}
+        />
+      </div>
 
       {error && (
         <div className="glass-card border border-red-500/30 p-4 text-sm text-red-200">
@@ -153,8 +159,8 @@ export default function RacePanel() {
           No data available. Click &quot;Use demo data&quot; to see a preview.
         </div>
       ) : (
-        <>
-          <div className="text-xs text-gray-500 mb-2">
+        <div className="glass-card p-6">
+          <div className="text-xs text-gray-400 mb-4">
             Rendering {series.length} series
           </div>
           <LineChartInteractive
@@ -163,7 +169,7 @@ export default function RacePanel() {
             forecast={forecast}
             smooth={smooth}
           />
-        </>
+        </div>
       )}
     </section>
   )
