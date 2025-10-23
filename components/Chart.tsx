@@ -12,6 +12,7 @@ import {
   Line,
   Brush,
 } from 'recharts'
+import ChartSkeleton from './ChartSkeleton'
 
 export type SeriesPoint = { year: number; value: number | null }
 
@@ -25,6 +26,9 @@ export default function TimeSeriesChart(props: {
   trend?: Trend
 }) {
   const { title, series, unit, showTrend, trend } = props
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => setMounted(true), [])
 
   const data = React.useMemo(() => {
     return (series || [])
@@ -46,40 +50,53 @@ export default function TimeSeriesChart(props: {
     [unit],
   )
 
+  if (!mounted) {
+    return (
+      <div className="glass-card p-6" style={{ marginTop: 16 }}>
+        <div className="text-lg font-semibold mb-4">{title}</div>
+        <ChartSkeleton />
+      </div>
+    )
+  }
+
   return (
-    <div className="box" style={{ marginTop: 16 }}>
-      <div className="box-header">{title}</div>
-      <div className="box-body">
-        <ResponsiveContainer width="100%" height={320}>
-          <LineChart data={data} margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="year" />
-            <YAxis tickFormatter={tickFmt as any} />
-            <Tooltip formatter={tooltipFmt as any} />
-            <Legend />
+    <div className="glass-card p-6 chart-fade-in" style={{ marginTop: 16 }}>
+      <div className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+        {title}
+      </div>
+      <ResponsiveContainer width="100%" height={320}>
+        <LineChart data={data} margin={{ top: 8, right: 24, left: 8, bottom: 8 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="year" />
+          <YAxis tickFormatter={tickFmt as any} />
+          <Tooltip formatter={tooltipFmt as any} />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke="#3b82f6"
+            strokeWidth={2}
+            dot={false}
+            isAnimationActive={true}
+            animationDuration={800}
+            animationEasing="ease-in-out"
+          />
+          {showTrend && trendData.length ? (
             <Line
               type="monotone"
-              dataKey="value"
-              stroke="#1565c0"
-              strokeWidth={2}
+              dataKey="y"
+              data={trendData}
+              stroke="#8b5cf6"
+              strokeDasharray="5 4"
               dot={false}
-              isAnimationActive={false}
+              isAnimationActive={true}
+              animationDuration={800}
+              animationEasing="ease-in-out"
             />
-            {showTrend && trendData.length ? (
-              <Line
-                type="monotone"
-                dataKey="y"
-                data={trendData}
-                stroke="#c62828"
-                strokeDasharray="5 4"
-                dot={false}
-                isAnimationActive={false}
-              />
-            ) : null}
-            <Brush dataKey="year" height={18} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+          ) : null}
+          <Brush dataKey="year" height={18} />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   )
 }

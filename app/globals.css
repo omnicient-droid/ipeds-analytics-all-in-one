@@ -2,24 +2,134 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---------- Base ---------- */
-html { scroll-behavior: smooth; }
-body { margin: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+/* ---------- Futuristic Design Tokens ---------- */
+:root {
+  --background-start: #0a0e1a;
+  --background-end: #1a1f35;
+  --foreground: #e8edf9;
+  --card-bg: rgba(26, 31, 53, 0.4);
+  --card-border: rgba(59, 130, 246, 0.2);
+  --primary: #3b82f6;
+  --secondary: #8b5cf6;
+  --accent: #10b981;
+}
 
+/* ---------- Base ---------- */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+  background-attachment: fixed;
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------- Glassmorphism Cards ---------- */
+.glass-card {
+  border-radius: 0.5rem;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+}
+
+.glass-card-hover {
+  border-radius: 0.5rem;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+  transition: all 0.3s ease;
+}
+
+.glass-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px 0 rgba(59, 130, 246, 0.3);
+  border-color: var(--primary);
+}
+
+/* ---------- Chart Animations ---------- */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.chart-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(26, 31, 53, 0.4) 0%,
+    rgba(59, 130, 246, 0.1) 50%,
+    rgba(26, 31, 53, 0.4) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chart-fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
 /* ---------- Present / Print helpers ---------- */
-body.present { background: #000; }
+body.present {
+  background: #000;
+}
 body.present header,
 body.present nav,
 body.present footer,
-body.present [data-noprint] { display: none !important; }
-body.present main { padding: 0 !important; }
-
+body.present [data-noprint] {
+  display: none !important;
+}
+body.present main {
+  padding: 0 !important;
+}
 @media print {
-  header, nav, footer, [data-noprint] { display: none !important; }
-  main { padding: 0 !important; }
-  @page { size: landscape; margin: 0.5in; }
+  header,
+  nav,
+  footer,
+  [data-noprint] {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  @page {
+    size: landscape;
+    margin: 0.5in;
+  }
 }
 
-/* ---------- Recharts minor polish ---------- */
-.recharts-default-tooltip { font-size: 12px; }
-.recharts-legend-item { cursor: pointer; }
+/* charts */
+.recharts-default-tooltip {
+  border-radius: 0.5rem !important;
+  border: 1px solid var(--card-border) !important;
+  background: var(--card-bg) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  backdrop-filter: blur(24px) !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37) !important;
+  font-size: 12px;
+  padding: 12px !important;
+}
+
+.recharts-legend-item {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.recharts-legend-item:hover {
+  opacity: 0.8;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(59, 130, 246, 0.1);
+}

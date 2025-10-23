@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { fetchSeries, APISeries } from '@/lib/series';
 import { StackedArea100, LineChartInteractive, ChartControls, TransformKind } from '@/components/Charts';
 import { SCHOOLS } from '@/lib/schools';
+import ChartSkeleton from '@/components/ChartSkeleton';
 
 const EF_RACES = ['EF.FALL.UG.WHITE','EF.FALL.UG.BLACK','EF.FALL.UG.HISP','EF.FALL.UG.ASIAN','EF.FALL.UG.TWOORMORE','EF.FALL.UG.NONRES','EF.FALL.UG.UNKNOWN'];
 const ADM = ['ADM.ADM_RATE','ADM.YIELD'];
@@ -64,48 +65,97 @@ export default function Client({ unitid }: { unitid: number }) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
-      <header className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">
-          {(school?.name ?? `UNITID ${unitid}`)}{star}
-        </h1>
-        <nav className="flex gap-2 text-sm">
-          <button onClick={()=>setTab('race')} className={`px-3 py-1 rounded ${tab==='race'?'bg-black text-white':'bg-gray-100'}`}>Race</button>
-          <button onClick={()=>setTab('adm')}  className={`px-3 py-1 rounded ${tab==='adm' ?'bg-black text-white':'bg-gray-100'}`}>Admissions</button>
-          <button onClick={()=>setTab('out')}  className={`px-3 py-1 rounded ${tab==='out' ?'bg-black text-white':'bg-gray-100'}`}>Outcomes</button>
-        </nav>
+      <header className="glass-card p-6 mb-6">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            {(school?.name ?? `UNITID ${unitid}`)}{star}
+          </h1>
+          <nav className="flex gap-2 text-sm">
+            <button 
+              onClick={()=>setTab('race')} 
+              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                tab==='race'
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
+                  : 'glass-card-hover'
+              }`}
+            >
+              Race
+            </button>
+            <button 
+              onClick={()=>setTab('adm')} 
+              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                tab==='adm'
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
+                  : 'glass-card-hover'
+              }`}
+            >
+              Admissions
+            </button>
+            <button 
+              onClick={()=>setTab('out')} 
+              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                tab==='out'
+                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
+                  : 'glass-card-hover'
+              }`}
+            >
+              Outcomes
+            </button>
+          </nav>
+        </div>
+        <p className="text-gray-300 text-sm mt-3">Interactive charts • toggle transform, smoothing, and forecasts.</p>
       </header>
 
-      <p className="text-gray-600 text-sm mt-1">Interactive charts • toggle transform, smoothing, and forecasts.</p>
-
-      {loading ? <div className="mt-6">Loading…</div> : (
+      {loading ? (
+        <div className="space-y-6">
+          <ChartSkeleton />
+          <ChartSkeleton />
+        </div>
+      ) : (
         <>
           {tab==='race' && (
-            <>
-              <ChartControls transform={transform} setTransform={setTransform} forecast={forecast} setForecast={setForecast} smooth={smooth} setSmooth={setSmooth}/>
-              <div className="mt-2">
+            <div className="space-y-6">
+              <div className="glass-card p-4">
+                <ChartControls transform={transform} setTransform={setTransform} forecast={forecast} setForecast={setForecast} smooth={smooth} setSmooth={setSmooth}/>
+              </div>
+              <div className="glass-card p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-200">Undergraduate Enrollment by Race/Ethnicity</h3>
                 <StackedArea100 byCategory={raceMap} />
               </div>
               {!!insights.length && (
-                <div className="mt-4 bg-amber-50 border border-amber-200 rounded p-3 text-sm">
-                  <b>Insights</b>
-                  <ul className="list-disc ml-6">
+                <div className="glass-card p-5 border-blue-500/30">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="h-1 w-1 rounded-full bg-blue-400" />
+                    <b className="text-blue-300">Insights</b>
+                  </div>
+                  <ul className="list-disc ml-6 text-gray-300 space-y-1">
                     {insights.map((b,i)=><li key={i}>{b}</li>)}
                   </ul>
                 </div>
               )}
-            </>
+            </div>
           )}
           {tab==='adm' && (
-            <>
-              <ChartControls transform={transform} setTransform={setTransform} forecast={forecast} setForecast={setForecast} smooth={smooth} setSmooth={setSmooth}/>
-              <LineChartInteractive series={admSeries} transform={transform} forecast={forecast} smooth={smooth}/>
-            </>
+            <div className="space-y-6">
+              <div className="glass-card p-4">
+                <ChartControls transform={transform} setTransform={setTransform} forecast={forecast} setForecast={setForecast} smooth={smooth} setSmooth={setSmooth}/>
+              </div>
+              <div className="glass-card p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-200">Admissions Metrics</h3>
+                <LineChartInteractive series={admSeries} transform={transform} forecast={forecast} smooth={smooth}/>
+              </div>
+            </div>
           )}
           {tab==='out' && (
-            <>
-              <ChartControls transform={transform} setTransform={setTransform} forecast={forecast} setForecast={setForecast} smooth={smooth} setSmooth={setSmooth}/>
-              <LineChartInteractive series={grSeries} transform={transform} forecast={forecast} smooth={smooth}/>
-            </>
+            <div className="space-y-6">
+              <div className="glass-card p-4">
+                <ChartControls transform={transform} setTransform={setTransform} forecast={forecast} setForecast={setForecast} smooth={smooth} setSmooth={setSmooth}/>
+              </div>
+              <div className="glass-card p-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-200">Graduation Outcomes</h3>
+                <LineChartInteractive series={grSeries} transform={transform} forecast={forecast} smooth={smooth}/>
+              </div>
+            </div>
           )}
         </>
       )}
