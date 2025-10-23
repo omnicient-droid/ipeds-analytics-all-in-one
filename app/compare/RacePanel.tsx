@@ -88,9 +88,13 @@ export default function RacePanel() {
         console.log('Colored series:', colored)
         setSeries(colored)
       } catch (e: any) {
+        console.error('Error fetching series:', e)
         setError(String(e?.message || e))
-        if (demoMode) {
-          setSeries(buildDemoSeries())
+        // Auto-load demo data on first error to show working charts immediately
+        if (!demoMode) {
+          console.log('Auto-loading demo data due to API error')
+          const demo = buildDemoSeries()
+          setSeries(demo)
         }
       } finally {
         setLoading(false)
