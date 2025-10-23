@@ -25,16 +25,61 @@ export default function RacePanel() {
   const [series, setSeries] = React.useState<APISeries[]>([])
   const [loading, setLoading] = React.useState<boolean>(true)
   const [error, setError] = React.useState<string | null>(null)
+  const [demoMode, setDemoMode] = React.useState<boolean>(false)
+
+  function buildDemoSeries(): APISeries[] {
+    const totals: Record<number, number> = {
+      190150: 8800,
+      199120: 19800,
+      166027: 6750,
+    }
+    const shares: Record<(typeof RACE_CODES)[number], number> = {
+      'EF.FALL.UG.WHITE': 0.35,
+      'EF.FALL.UG.BLACK': 0.06,
+      'EF.FALL.UG.HISP': 0.17,
+      'EF.FALL.UG.ASIAN': 0.14,
+      'EF.FALL.UG.TWOORMORE': 0.08,
+      'EF.FALL.UG.NONRES': 0.12,
+      'EF.FALL.UG.UNKNOWN': 0.08,
+    }
+    const years = Array.from({ length: 10 }, (_, i) => 2015 + i)
+    const out: APISeries[] = []
+    for (const u of UNITIDS) {
+      for (const code of RACE_CODES) {
+        const pts = years.map((y, i) => ({
+          year: y,
+          value: Math.round(
+            totals[u] * shares[code] * (1 + 0.02 * (i - years.length / 2)) + (u % 3) * 50,
+          ),
+        }))
+        out.push({
+          code,
+          unitid: u,
+          label: `${code.split('.').slice(-1)[0]} (demo)`,
+          unit: 'headcount',
+          points: pts,
+          survey: 'EF',
+          source: 'Demo',
+        })
+      }
+    }
+    return out
+  }
 
   React.useEffect(() => {
     ;(async () => {
       try {
         setLoading(true)
         setError(null)
-        const s = await fetchSeries([...RACE_CODES], UNITIDS, {
-          from: 2010,
-          to: new Date().getFullYear(),
-        })
+        const s = await fetchSeries(
+          [...RACE_CODES],
+          UNITIDS,
+          {
+            from: 2010,
+            to: new Date().getFullYear(),
+          },
+          { retries: 2, timeoutMs: 12000 },
+        )
         const colored = s.map((r) => {
           const sch = SCHOOL_LIST.find((x) => x.unitid === r.unitid)
           return { ...r, color: sch?.color, label: sch?.short ?? String(r.unitid) }
@@ -42,11 +87,14 @@ export default function RacePanel() {
         setSeries(colored)
       } catch (e: any) {
         setError(String(e?.message || e))
+        if (demoMode) {
+          setSeries(buildDemoSeries())
+        }
       } finally {
         setLoading(false)
       }
     })()
-  }, [])
+  }, [demoMode])
 
   return (
     <section className="space-y-4">
@@ -61,9 +109,39 @@ export default function RacePanel() {
         setSmooth={setSmooth}
       />
 
-      {error && <div className="text-red-600 text-sm">Error: {error}</div>}
+      {error && (
+        <div className="glass-card p-4 border border-red-500/30 text-sm text-red-200">
+          <div className="flex items-center justify-between">
+            <div>Error loading data: {error}</div>
+            <div className="flex gap-2">
+              <button
+                className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500"
+                onClick={() => {
+                  setDemoMode(false)
+                  setLoading(true)
+                  setError(null)
+                }}
+              >
+                Retry
+              </button>
+              <button
+                className="px-3 py-1 rounded bg-purple-600 hover:bg-purple-500"
+                onClick={() => {
+                  setDemoMode(true)
+                  setSeries(buildDemoSeries())
+                }}
+              >
+                Use demo data
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {loading ? (
-        <div className="mt-4">Loading…</div>
+        <div className="mt-4 glass-card p-6">
+          <div className="h-6 w-48 chart-skeleton rounded mb-4" />
+          <div className="h-64 chart-skeleton rounded" />
+        </div>
       ) : (
         <LineChartInteractive
           series={series}

@@ -226,9 +226,9 @@ export function StackedArea100({ byCategory }: { byCategory: Record<string, Poin
     for (const c of cats) row[c] = shares[c].find((p) => p.year === y)?.value ?? null
     return row
   })
-  
+
   if (!mounted) return <ChartSkeleton />
-  
+
   return (
     <div className="chart-fade-in">
       <ResponsiveContainer width="100%" height={380}>
@@ -240,7 +240,9 @@ export function StackedArea100({ byCategory }: { byCategory: Record<string, Poin
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="year" />
           <YAxis tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} />
-          <Tooltip formatter={(v: any) => (typeof v === 'number' ? `${(v * 100).toFixed(1)}%` : v)} />
+          <Tooltip
+            formatter={(v: any) => (typeof v === 'number' ? `${(v * 100).toFixed(1)}%` : v)}
+          />
           <Legend />
           {cats.map((c, i) => (
             <Area
