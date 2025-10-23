@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Design tokens (shadcn-like palette) */
 :root {
   --background: 0 0% 100%;
@@ -38,10 +34,6 @@
   --input: 217.2 32.6% 17.5%;
   --ring: 212.7 26.8% 83.9%;
 }
-
-body { @apply bg-background text-foreground; }
-.container-bleed { @apply max-w-[1200px] mx-auto px-4; }
-.card { @apply rounded-lg border bg-card text-card-foreground shadow-sm; }
 
 /* ---------- Present / Print helpers ---------- */
 body.present { background: #000; }
