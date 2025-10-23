@@ -9,6 +9,8 @@ import {
 } from '@/components/Charts'
 import { SCHOOLS } from '@/lib/schools'
 import ChartSkeleton from '@/components/ChartSkeleton'
+import MascotSplash from '@/components/MascotSplash'
+import { fetchLifeByZip, getZipForUnit } from '@/lib/life'
 
 const EF_RACES = [
   'EF.FALL.UG.WHITE',
@@ -72,19 +74,23 @@ export default function Client({ unitid }: { unitid: number }) {
   const [raceSeries, setRaceSeries] = useState<APISeries[]>([])
   const [admSeries, setAdmSeries] = useState<APISeries[]>([])
   const [grSeries, setGrSeries] = useState<APISeries[]>([])
+  const [lifeSeries, setLifeSeries] = useState<APISeries | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
+    const zip = getZipForUnit(unitid)
     Promise.all([
       fetchSeries(EF_RACES, [unitid]),
       fetchSeries(ADM, [unitid]),
       fetchSeries(GR, [unitid]),
+      zip ? fetchLifeByZip(zip) : Promise.resolve(null),
     ])
-      .then(([race, adm, gr]) => {
+      .then(([race, adm, gr, life]) => {
         setRaceSeries(race)
         setAdmSeries(adm)
         setGrSeries(gr)
+        setLifeSeries(life)
       })
       .finally(() => setLoading(false))
   }, [unitid])
@@ -100,6 +106,7 @@ export default function Client({ unitid }: { unitid: number }) {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
+      <MascotSplash unitid={unitid} />
       <header className="glass-card p-6 mb-6">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
@@ -205,6 +212,35 @@ export default function Client({ unitid }: { unitid: number }) {
                   smooth={smooth}
                 />
               </div>
+              {lifeSeries && (
+                <div className="glass-card p-6">
+                  <h3 className="mb-4 text-lg font-semibold text-gray-200">
+                    Neighborhood Life Expectancy (ZIP) vs Admission Rate
+                  </h3>
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <div>
+                      <LineChartInteractive
+                        series={[lifeSeries]}
+                        transform="level"
+                        forecast={0}
+                        smooth={false}
+                      />
+                    </div>
+                    <div>
+                      <LineChartInteractive
+                        series={admSeries.filter((s) => s.code === 'ADM.ADM_RATE')}
+                        transform={transform}
+                        forecast={forecast}
+                        smooth={smooth}
+                      />
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs text-gray-400">
+                    Note: Life expectancy by ZIP is a proxy for local health conditions near campus. Use with care; true
+                    relationships require careful causal analysis.
+                  </p>
+                </div>
+              )}
             </div>
           )}
           {tab === 'out' && (

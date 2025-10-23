@@ -1,12 +1,13 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
 
-import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import ThemeProvider from '@/components/site/ThemeProvider';
-import Header from '@/components/site/Header';
+import './globals.css'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import ThemeProvider from '@/components/site/ThemeProvider'
+import { ToastProvider } from '@/components/ToastProvider'
+import Header from '@/components/site/Header'
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Statipedia — University Analytics',
@@ -17,20 +18,22 @@ export const metadata: Metadata = {
     description: 'Interactive university analytics.',
     url: 'https://your-domain.vercel.app',
     siteName: 'Statipedia',
-    type: 'website'
+    type: 'website',
   },
   icons: [{ rel: 'icon', url: '/favicon.svg' }],
-};
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider>
-          <Header />
-          <main className="container-bleed py-6">{children}</main>
+          <ToastProvider>
+            <Header />
+            <main className="container-bleed py-6">{children}</main>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

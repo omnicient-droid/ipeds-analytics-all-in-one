@@ -23,9 +23,10 @@ async function runSearch(q: string) {
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: { q?: string }
+  searchParams: Promise<{ q?: string }>
 }) {
-  const q = (searchParams.q || '').trim()
+  const { q: rawQ = '' } = await searchParams
+  const q = rawQ.trim()
   const results = await runSearch(q)
 
   return (
@@ -46,9 +47,7 @@ export default async function SearchPage({
 
         {q && (
           <>
-            <p style={{ marginTop: 12, color: '#5b6470' }}>
-              Found {results.length} result(s).
-            </p>
+            <p style={{ marginTop: 12, color: '#5b6470' }}>Found {results.length} result(s).</p>
             <table role="table" aria-label="Search results">
               <thead>
                 <tr>
@@ -62,9 +61,7 @@ export default async function SearchPage({
                 {results.map((r) => (
                   <tr key={r.id}>
                     <td>
-                      <Link href={`/u/${r.unitid}`}>
-                        {r.name || '(Unnamed)'}
-                      </Link>
+                      <Link href={`/u/${r.unitid}`}>{r.name || '(Unnamed)'}</Link>
                     </td>
                     <td>{r.city}</td>
                     <td>{r.state}</td>

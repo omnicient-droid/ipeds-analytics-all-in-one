@@ -12,6 +12,7 @@ import {
   Brush,
   AreaChart,
   Area,
+  ReferenceLine,
 } from 'recharts'
 import type { APISeries } from '@/lib/series'
 import { yoy, index, movingAvg, toShares, type Point } from '@/lib/transform'
@@ -48,37 +49,37 @@ export function ChartControls(p: {
   setSmooth: (b: boolean) => void
 }) {
   return (
-    <div className="flex flex-wrap gap-4 my-4 text-sm">
-      <label className="flex items-center gap-2 text-gray-300 font-medium">
+    <div className="my-4 flex flex-wrap gap-4 text-sm">
+      <label className="flex items-center gap-2 font-medium text-gray-300">
         <span className="text-blue-400">Transform:</span>
         <select
           value={p.transform}
           onChange={(e) => p.setTransform(e.target.value as TransformKind)}
-          className="border border-blue-500/30 rounded-lg px-3 py-2 bg-gray-800/90 text-gray-200 hover:border-blue-500/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 cursor-pointer shadow-md"
+          className="cursor-pointer rounded-lg border border-blue-500/30 bg-gray-800/90 px-3 py-2 text-gray-200 shadow-md transition-all duration-200 hover:border-blue-500/50 focus:ring-2 focus:ring-blue-500/50 focus:outline-none"
         >
           <option value="level">Level</option>
           <option value="yoy">YoY %</option>
           <option value="index">Index (2015=100)</option>
         </select>
       </label>
-      <label className="flex items-center gap-2 text-gray-300 font-medium">
+      <label className="flex items-center gap-2 font-medium text-gray-300">
         <span className="text-purple-400">Forecast:</span>
         <select
           value={p.forecast}
           onChange={(e) => p.setForecast(parseInt(e.target.value))}
-          className="border border-purple-500/30 rounded-lg px-3 py-2 bg-gray-800/90 text-gray-200 hover:border-purple-500/50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500/50 cursor-pointer shadow-md"
+          className="cursor-pointer rounded-lg border border-purple-500/30 bg-gray-800/90 px-3 py-2 text-gray-200 shadow-md transition-all duration-200 hover:border-purple-500/50 focus:ring-2 focus:ring-purple-500/50 focus:outline-none"
         >
           <option value="0">Off</option>
           <option value="3">3y</option>
           <option value="5">5y</option>
         </select>
       </label>
-      <label className="flex items-center gap-2 text-gray-300 font-medium cursor-pointer hover:text-white transition-colors duration-200">
-        <input 
-          type="checkbox" 
-          checked={p.smooth} 
-          onChange={(e) => p.setSmooth(e.target.checked)} 
-          className="w-4 h-4 rounded border-green-500/30 bg-gray-800 text-green-500 focus:ring-2 focus:ring-green-500/50 cursor-pointer"
+      <label className="flex cursor-pointer items-center gap-2 font-medium text-gray-300 transition-colors duration-200 hover:text-white">
+        <input
+          type="checkbox"
+          checked={p.smooth}
+          onChange={(e) => p.setSmooth(e.target.checked)}
+          className="h-4 w-4 cursor-pointer rounded border-green-500/30 bg-gray-800 text-green-500 focus:ring-2 focus:ring-green-500/50"
         />
         <span className="text-green-400">Smooth (3-yr)</span>
       </label>
@@ -135,31 +136,34 @@ export function LineChartInteractive({
   smooth: boolean
 }) {
   const mounted = useMounted()
-  const processed = useMemo(
-    () => {
-      console.log('LineChartInteractive received series:', series)
-      const result = series.map((s, i) => {
-        console.log(`Processing series ${i}:`, { code: s.code, unitid: s.unitid, pointsCount: s.points?.length })
-        let pts = s.points.slice().sort((a, b) => a.year - b.year)
-        pts = applyTransform(pts, transform)
-        if (smooth) pts = movingAvg(pts, 3)
-        if (forecast > 0) {
-          const proj = linForecast(pts, forecast).map((p) => ({ ...p, value: p.value ?? null }))
-          pts = pts.concat(proj)
-        }
-        const name = s.label || s.code
-        return {
-          ...s,
-          points: pts,
-          __name: name,
-          __color: s.color || PALETTE[i % PALETTE.length],
-        } as APISeries & { __name: string; __color: string }
+  const [hoveredSeries, setHoveredSeries] = useState<string | null>(null)
+  const [activeYear, setActiveYear] = useState<number | null>(null)
+  const processed = useMemo(() => {
+    console.log('LineChartInteractive received series:', series)
+    const result = series.map((s, i) => {
+      console.log(`Processing series ${i}:`, {
+        code: s.code,
+        unitid: s.unitid,
+        pointsCount: s.points?.length,
       })
-      console.log('Processed series:', result)
-      return result
-    },
-    [series, transform, smooth, forecast],
-  )
+      let pts = s.points.slice().sort((a, b) => a.year - b.year)
+      pts = applyTransform(pts, transform)
+      if (smooth) pts = movingAvg(pts, 3)
+      if (forecast > 0) {
+        const proj = linForecast(pts, forecast).map((p) => ({ ...p, value: p.value ?? null }))
+        pts = pts.concat(proj)
+      }
+      const name = s.label || s.code
+      return {
+        ...s,
+        points: pts,
+        __name: name,
+        __color: s.color || PALETTE[i % PALETTE.length],
+      } as APISeries & { __name: string; __color: string }
+    })
+    console.log('Processed series:', result)
+    return result
+  }, [series, transform, smooth, forecast])
   const years = useMemo(
     () =>
       Array.from(new Set(processed.flatMap((s) => s.points.map((p) => p.year)))).sort(
@@ -167,20 +171,17 @@ export function LineChartInteractive({
       ),
     [processed],
   )
-  const data = useMemo(
-    () => {
-      const result = years.map((y) => {
-        const row: any = { year: y }
-        for (const s of processed) {
-          row[s.__name] = s.points.find((p) => p.year === y)?.value ?? null
-        }
-        return row
-      })
-      console.log('Chart data for Recharts:', result)
-      return result
-    },
-    [years, processed],
-  )
+  const data = useMemo(() => {
+    const result = years.map((y) => {
+      const row: any = { year: y }
+      for (const s of processed) {
+        row[s.__name] = s.points.find((p) => p.year === y)?.value ?? null
+      }
+      return row
+    })
+    console.log('Chart data for Recharts:', result)
+    return result
+  }, [years, processed])
   const { min, max } = useMemo(() => extent(processed), [processed])
   const yDomain = transform === 'yoy' ? [min * 1.1, max * 1.1] : ['auto', 'auto']
   const tickFmt =
@@ -190,23 +191,104 @@ export function LineChartInteractive({
 
   if (!mounted) return <ChartSkeleton />
 
+  // Custom tooltip that shows all series at a year, or a single series when a line is hovered
+  const CustomTooltip = ({ active, label, payload }: any) => {
+    if (!active || !payload || payload.length === 0) return null
+    const rows = (
+      hoveredSeries ? payload.filter((p: any) => p.name === hoveredSeries) : payload
+    ).filter((p: any) => p.value != null)
+    if (rows.length === 0) return null
+    return (
+      <div className="rounded-md border border-white/10 bg-gray-900/90 px-3 py-2 text-xs shadow-lg backdrop-blur">
+        <div className="mb-1 font-medium text-gray-200">Year {label}</div>
+        <div className="grid grid-cols-1 gap-1">
+          {rows
+            .sort((a: any, b: any) => (b.value ?? 0) - (a.value ?? 0))
+            .map((p: any) => (
+              <div key={p.name} className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="inline-block h-2 w-2 rounded-full"
+                    style={{ backgroundColor: p.color }}
+                  />
+                  <span className="text-gray-300">{p.name}</span>
+                </div>
+                <div className="text-gray-100 tabular-nums">
+                  {typeof p.value === 'number'
+                    ? transform === 'yoy'
+                      ? `${(p.value * 100).toFixed(2)}%`
+                      : p.value.toLocaleString()
+                    : '—'}
+                </div>
+              </div>
+            ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Custom active dot with small value label
+  const ActiveDot = (props: any) => {
+    const { cx, cy, stroke, value } = props
+    if (value == null) return null
+    const display =
+      transform === 'yoy' ? `${(value * 100).toFixed(1)}%` : `${Number(value).toLocaleString()}`
+    return (
+      <g>
+        <circle cx={cx} cy={cy} r={4} fill={stroke} stroke="none" />
+        <rect
+          x={cx + 6}
+          y={cy - 10}
+          rx={3}
+          ry={3}
+          width={Math.max(22, display.length * 6)}
+          height={16}
+          fill="rgba(17,24,39,0.9)"
+          stroke="rgba(255,255,255,0.12)"
+        />
+        <text x={cx + 8} y={cy + 2} fontSize={10} fill="#e5e7eb">
+          {display}
+        </text>
+      </g>
+    )
+  }
+
   return (
     <div className="chart-fade-in">
       <ResponsiveContainer width="100%" height={420}>
-        <LineChart data={data} margin={{ top: 10, right: 28, left: 10, bottom: 8 }}>
+        <LineChart
+          data={data}
+          margin={{ top: 10, right: 28, left: 10, bottom: 8 }}
+          onMouseMove={(e: any) => setActiveYear(e?.activeLabel ?? null)}
+          onMouseLeave={() => {
+            setActiveYear(null)
+            setHoveredSeries(null)
+          }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(59, 130, 246, 0.15)" />
-          <XAxis dataKey="year" tick={{ fill: '#cbd5e1' }} tickLine={false} axisLine={{ stroke: 'rgba(59, 130, 246, 0.2)' }} />
-          <YAxis domain={yDomain as any} tickFormatter={tickFmt} tick={{ fill: '#cbd5e1' }} tickLine={false} axisLine={{ stroke: 'rgba(59, 130, 246, 0.2)' }} />
-          <Tooltip
-            formatter={(v: any) =>
-              typeof v === 'number'
-                ? transform === 'yoy'
-                  ? `${(v * 100).toFixed(2)}%`
-                  : v.toLocaleString()
-                : v
-            }
+          <XAxis
+            dataKey="year"
+            tick={{ fill: '#cbd5e1' }}
+            tickLine={false}
+            axisLine={{ stroke: 'rgba(59, 130, 246, 0.2)' }}
           />
+          <YAxis
+            domain={yDomain as any}
+            tickFormatter={tickFmt}
+            tick={{ fill: '#cbd5e1' }}
+            tickLine={false}
+            axisLine={{ stroke: 'rgba(59, 130, 246, 0.2)' }}
+          />
+          <Tooltip content={<CustomTooltip />} />
           <Legend wrapperStyle={{ color: '#e5e7eb' }} />
+          {activeYear != null ? (
+            <ReferenceLine
+              x={activeYear}
+              stroke="rgba(148, 163, 184, 0.35)"
+              strokeDasharray="4 3"
+              ifOverflow="extendDomain"
+            />
+          ) : null}
           {processed.map((s) => (
             <Line
               key={s.__name}
@@ -219,7 +301,9 @@ export function LineChartInteractive({
               animationDuration={800}
               animationEasing="ease-in-out"
               strokeOpacity={0.95}
-              activeDot={{ r: 4, strokeWidth: 0 }}
+              activeDot={<ActiveDot />}
+              onMouseOver={() => setHoveredSeries(s.__name)}
+              onMouseLeave={() => setHoveredSeries(null)}
             />
           ))}
           <Brush dataKey="year" height={18} />

@@ -1,14 +1,22 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic'
 // app/m/[code]/page.tsx
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
 
-export default async function MetricPage({
-  params,
-}: {
-  params: { code: string }
-}) {
-  const code = decodeURIComponent(params.code)
+function emojiFor(code: string): string {
+  if (code.startsWith('EF.')) return '🧑‍🎓'
+  if (code.startsWith('ADM.')) return '📝'
+  if (code.startsWith('GR.')) return '🎓'
+  if (code.startsWith('RET.')) return '🔁'
+  if (code.startsWith('SFA.')) return '💵'
+  if (code.startsWith('IC.')) return '💸'
+  if (code.startsWith('DRVHR.') || code.startsWith('HR.')) return '👩‍🏫'
+  return '📊'
+}
+
+export default async function MetricPage({ params }: { params: Promise<{ code: string }> }) {
+  const { code: raw } = await params
+  const code = decodeURIComponent(raw)
 
   // get the metric id/name/unit by code
   const metric = await prisma.metric.findUnique({
@@ -51,18 +59,24 @@ export default async function MetricPage({
     rows = data.map((d) => ({
       unitid: d.university.unitid,
       name: d.university.name,
-      value: d.value as number | null,
+      value: d.value != null ? Number(d.value) : null,
     }))
   }
 
   return (
     <div className="box">
-      <div className="box-header">{metric.name ?? metric.code}</div>
+      <div className="box-header">
+        <span style={{ marginRight: 6 }}>{emojiFor(metric.code)}</span>
+        {metric.name ?? metric.code}
+      </div>
       <div className="box-body">
         <p>
           <code>{metric.code}</code> · unit: <em>{metric.unit || 'n/a'}</em>{' '}
           {latestYear ? (
-            <> · latest year: <strong>{latestYear}</strong></>
+            <>
+              {' '}
+              · latest year: <strong>{latestYear}</strong>
+            </>
           ) : (
             <>· no year found</>
           )}
@@ -84,7 +98,7 @@ export default async function MetricPage({
                   <td>
                     <Link href={`/u/${r.unitid}`}>{r.name ?? '(Unnamed)'}</Link>
                   </td>
-                  <td>{r.value}</td>
+                  <td>{r.value != null ? r.value.toLocaleString() : '—'}</td>
                 </tr>
               ))}
             </tbody>
