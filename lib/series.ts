@@ -1,16 +1,25 @@
-import type { Point } from './transform';
+import type { Point } from './transform'
 
 export type APISeries = {
-  code: string; unitid: number; label: string; unit: string;
-  points: Point[]; color?: string; survey?: string; source?: string;
-};
+  code: string
+  unitid: number
+  label: string
+  unit: string
+  points: Point[]
+  color?: string
+  survey?: string
+  source?: string
+}
 
 type FetchOptions = {
-  timeoutMs?: number;
-  retries?: number;
-};
+  timeoutMs?: number
+  retries?: number
+}
 
-async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit & { timeoutMs?: number } = {}) {
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit & { timeoutMs?: number } = {},
+) {
   const { timeoutMs = 15000, ...rest } = init
   const controller = new AbortController()
   const id = setTimeout(() => controller.abort(), timeoutMs)

@@ -80,10 +80,12 @@ export default function RacePanel() {
           },
           { retries: 2, timeoutMs: 12000 },
         )
+        console.log('Fetched series from API:', s)
         const colored = s.map((r) => {
           const sch = SCHOOL_LIST.find((x) => x.unitid === r.unitid)
           return { ...r, color: sch?.color, label: sch?.short ?? String(r.unitid) }
         })
+        console.log('Colored series:', colored)
         setSeries(colored)
       } catch (e: any) {
         setError(String(e?.message || e))
@@ -110,12 +112,12 @@ export default function RacePanel() {
       />
 
       {error && (
-        <div className="glass-card p-4 border border-red-500/30 text-sm text-red-200">
+        <div className="glass-card border border-red-500/30 p-4 text-sm text-red-200">
           <div className="flex items-center justify-between">
             <div>Error loading data: {error}</div>
             <div className="flex gap-2">
               <button
-                className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500"
+                className="rounded bg-blue-600 px-3 py-1 hover:bg-blue-500"
                 onClick={() => {
                   setDemoMode(false)
                   setLoading(true)
@@ -125,7 +127,7 @@ export default function RacePanel() {
                 Retry
               </button>
               <button
-                className="px-3 py-1 rounded bg-purple-600 hover:bg-purple-500"
+                className="rounded bg-purple-600 px-3 py-1 hover:bg-purple-500"
                 onClick={() => {
                   setDemoMode(true)
                   setSeries(buildDemoSeries())
@@ -138,17 +140,26 @@ export default function RacePanel() {
         </div>
       )}
       {loading ? (
-        <div className="mt-4 glass-card p-6">
-          <div className="h-6 w-48 chart-skeleton rounded mb-4" />
-          <div className="h-64 chart-skeleton rounded" />
+        <div className="glass-card mt-4 p-6">
+          <div className="chart-skeleton mb-4 h-6 w-48 rounded" />
+          <div className="chart-skeleton h-64 rounded" />
+        </div>
+      ) : series.length === 0 ? (
+        <div className="glass-card p-6 text-center text-gray-400">
+          No data available. Click &quot;Use demo data&quot; to see a preview.
         </div>
       ) : (
-        <LineChartInteractive
-          series={series}
-          transform={transform}
-          forecast={forecast}
-          smooth={smooth}
-        />
+        <>
+          <div className="text-xs text-gray-500 mb-2">
+            Rendering {series.length} series
+          </div>
+          <LineChartInteractive
+            series={series}
+            transform={transform}
+            forecast={forecast}
+            smooth={smooth}
+          />
+        </>
       )}
     </section>
   )

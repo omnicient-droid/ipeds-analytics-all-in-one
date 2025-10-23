@@ -131,8 +131,10 @@ export function LineChartInteractive({
 }) {
   const mounted = useMounted()
   const processed = useMemo(
-    () =>
-      series.map((s, i) => {
+    () => {
+      console.log('LineChartInteractive received series:', series)
+      const result = series.map((s, i) => {
+        console.log(`Processing series ${i}:`, { code: s.code, unitid: s.unitid, pointsCount: s.points?.length })
         let pts = s.points.slice().sort((a, b) => a.year - b.year)
         pts = applyTransform(pts, transform)
         if (smooth) pts = movingAvg(pts, 3)
@@ -147,7 +149,10 @@ export function LineChartInteractive({
           __name: name,
           __color: s.color || PALETTE[i % PALETTE.length],
         } as APISeries & { __name: string; __color: string }
-      }),
+      })
+      console.log('Processed series:', result)
+      return result
+    },
     [series, transform, smooth, forecast],
   )
   const years = useMemo(
@@ -158,14 +163,17 @@ export function LineChartInteractive({
     [processed],
   )
   const data = useMemo(
-    () =>
-      years.map((y) => {
+    () => {
+      const result = years.map((y) => {
         const row: any = { year: y }
         for (const s of processed) {
           row[s.__name] = s.points.find((p) => p.year === y)?.value ?? null
         }
         return row
-      }),
+      })
+      console.log('Chart data for Recharts:', result)
+      return result
+    },
     [years, processed],
   )
   const { min, max } = useMemo(() => extent(processed), [processed])
