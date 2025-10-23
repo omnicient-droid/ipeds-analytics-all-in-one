@@ -31,7 +31,7 @@ export default function MascotSplash({ unitid, durationMs = 2200 }: Props) {
     // Try to preload the mascot gif from public
     const key = (school?.key ?? 'unknown').toLowerCase()
     const candidate = `/mascots/${key}.gif`
-  const img = new window.Image()
+    const img = new window.Image()
     img.onload = () => {
       if (cancelled) return
       setGifSrc(candidate)
@@ -55,7 +55,7 @@ export default function MascotSplash({ unitid, durationMs = 2200 }: Props) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm">
       <button
-        className="absolute right-4 top-4 rounded-lg bg-white/10 px-3 py-1 text-xs text-white hover:bg-white/20"
+        className="absolute top-4 right-4 rounded-lg bg-white/10 px-3 py-1 text-xs text-white hover:bg-white/20"
         onClick={() => setVisible(false)}
       >
         Skip
@@ -77,7 +77,7 @@ export default function MascotSplash({ unitid, durationMs = 2200 }: Props) {
             <img
               src={school?.logo || '/logos/placeholder.png'}
               alt={school?.logoAlt || 'School Logo'}
-              className="h-24 w-24 object-contain animate-bounce [animation-duration:1.2s]"
+              className="h-24 w-24 animate-bounce object-contain [animation-duration:1.2s]"
               style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.4))' }}
             />
           </div>

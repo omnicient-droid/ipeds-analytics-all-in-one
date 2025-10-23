@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 // app/m/[code]/page.tsx
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
+import { friendlyLabelFromCode } from '@/lib/labels'
 
 function emojiFor(code: string): string {
   if (code.startsWith('EF.')) return '🧑‍🎓'
@@ -67,11 +68,12 @@ export default async function MetricPage({ params }: { params: Promise<{ code: s
     <div className="box">
       <div className="box-header">
         <span style={{ marginRight: 6 }}>{emojiFor(metric.code)}</span>
-        {metric.name ?? metric.code}
+        {friendlyLabelFromCode(metric.code, metric.name)}
       </div>
       <div className="box-body">
         <p>
-          <code>{metric.code}</code> · unit: <em>{metric.unit || 'n/a'}</em>{' '}
+          {/* code intentionally hidden in UI to avoid internal jargon */}
+          unit: <em>{metric.unit || 'n/a'}</em>{' '}
           {latestYear ? (
             <>
               {' '}

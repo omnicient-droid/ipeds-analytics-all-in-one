@@ -6,6 +6,7 @@ import { LineChartInteractive } from '@/components/Chart'
 import { StackedArea100 } from '@/components/Charts'
 import { fetchSeries, type APISeries } from '@/lib/series'
 import { NATIONAL_BENCHMARKS } from '@/lib/benchmarks'
+import { friendlyLabelFromCode } from '@/lib/labels'
 import { useToast } from '@/components/ToastProvider'
 import type { TransformKind } from '@/components/TransformControls'
 
@@ -415,7 +416,9 @@ export default function SchoolProfile({
 
           return (
             <div key={s.code} className="glass-card-hover p-6">
-              <h4 className="mb-4 text-lg font-semibold text-blue-300">{s.label || s.code}</h4>
+              <h4 className="mb-4 text-lg font-semibold text-blue-300">
+                {friendlyLabelFromCode(s.code, s.label)}
+              </h4>
               <div className="text-3xl font-bold text-white">{displayValue}</div>
               <div className="mt-1 text-xs text-gray-400">
                 {latest ? `Latest: ${latest.year}` : 'No data'}
@@ -436,7 +439,9 @@ export default function SchoolProfile({
 
           return (
             <div key={s.code} className="glass-card-hover border-green-500/20 p-6">
-              <h4 className="mb-4 text-lg font-semibold text-green-300">{s.label || s.code}</h4>
+              <h4 className="mb-4 text-lg font-semibold text-green-300">
+                {friendlyLabelFromCode(s.code, s.label)}
+              </h4>
               <div className="text-3xl font-bold text-white">{displayValue}</div>
               <div className="mt-1 text-xs text-gray-400">
                 {latest ? `Latest: ${latest.year}` : 'No data'}
@@ -452,7 +457,9 @@ export default function SchoolProfile({
 
           return (
             <div key={s.code} className="glass-card-hover border-purple-500/20 p-6">
-              <h4 className="mb-4 text-lg font-semibold text-purple-300">{s.label || s.code}</h4>
+              <h4 className="mb-4 text-lg font-semibold text-purple-300">
+                {friendlyLabelFromCode(s.code, s.label)}
+              </h4>
               <div className="text-3xl font-bold text-white">{displayValue}</div>
               <div className="mt-1 text-xs text-gray-400">
                 {latest ? `Latest: ${latest.year}` : 'No data'}

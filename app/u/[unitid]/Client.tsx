@@ -107,16 +107,16 @@ export default function Client({ unitid }: { unitid: number }) {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <MascotSplash unitid={unitid} />
-      <header className="glass-card p-6 mb-6">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+      <header className="glass-card mb-6 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-3xl font-bold text-transparent">
             {school?.name ?? `UNITID ${unitid}`}
             {star}
           </h1>
           <nav className="flex gap-2 text-sm">
             <button
               onClick={() => setTab('race')}
-              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+              className={`rounded-lg px-4 py-2 transition-all duration-200 ${
                 tab === 'race'
                   ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
                   : 'glass-card-hover'
@@ -126,7 +126,7 @@ export default function Client({ unitid }: { unitid: number }) {
             </button>
             <button
               onClick={() => setTab('adm')}
-              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+              className={`rounded-lg px-4 py-2 transition-all duration-200 ${
                 tab === 'adm'
                   ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
                   : 'glass-card-hover'
@@ -136,7 +136,7 @@ export default function Client({ unitid }: { unitid: number }) {
             </button>
             <button
               onClick={() => setTab('out')}
-              className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+              className={`rounded-lg px-4 py-2 transition-all duration-200 ${
                 tab === 'out'
                   ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
                   : 'glass-card-hover'
@@ -146,7 +146,7 @@ export default function Client({ unitid }: { unitid: number }) {
             </button>
           </nav>
         </div>
-        <p className="text-gray-300 text-sm mt-3">
+        <p className="mt-3 text-sm text-gray-300">
           Interactive charts • toggle transform, smoothing, and forecasts.
         </p>
       </header>
@@ -171,18 +171,18 @@ export default function Client({ unitid }: { unitid: number }) {
                 />
               </div>
               <div className="glass-card p-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-200">
+                <h3 className="mb-4 text-lg font-semibold text-gray-200">
                   Undergraduate Enrollment by Race/Ethnicity
                 </h3>
                 <StackedArea100 byCategory={raceMap} />
               </div>
               {!!insights.length && (
-                <div className="glass-card p-5 border-blue-500/30">
-                  <div className="flex items-center gap-2 mb-3">
+                <div className="glass-card border-blue-500/30 p-5">
+                  <div className="mb-3 flex items-center gap-2">
                     <div className="h-1 w-1 rounded-full bg-blue-400" />
                     <b className="text-blue-300">Insights</b>
                   </div>
-                  <ul className="list-disc ml-6 text-gray-300 space-y-1">
+                  <ul className="ml-6 list-disc space-y-1 text-gray-300">
                     {insights.map((b, i) => (
                       <li key={i}>{b}</li>
                     ))}
@@ -204,7 +204,7 @@ export default function Client({ unitid }: { unitid: number }) {
                 />
               </div>
               <div className="glass-card p-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-200">Admissions Metrics</h3>
+                <h3 className="mb-4 text-lg font-semibold text-gray-200">Admissions Metrics</h3>
                 <LineChartInteractive
                   series={admSeries}
                   transform={transform}
@@ -236,8 +236,8 @@ export default function Client({ unitid }: { unitid: number }) {
                     </div>
                   </div>
                   <p className="mt-3 text-xs text-gray-400">
-                    Note: Life expectancy by ZIP is a proxy for local health conditions near campus. Use with care; true
-                    relationships require careful causal analysis.
+                    Note: Life expectancy by ZIP is a proxy for local health conditions near campus.
+                    Use with care; true relationships require careful causal analysis.
                   </p>
                 </div>
               )}
@@ -256,7 +256,7 @@ export default function Client({ unitid }: { unitid: number }) {
                 />
               </div>
               <div className="glass-card p-6">
-                <h3 className="text-lg font-semibold mb-4 text-gray-200">Graduation Outcomes</h3>
+                <h3 className="mb-4 text-lg font-semibold text-gray-200">Graduation Outcomes</h3>
                 <LineChartInteractive
                   series={grSeries}
                   transform={transform}
