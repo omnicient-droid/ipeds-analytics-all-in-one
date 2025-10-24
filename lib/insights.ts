@@ -16,7 +16,7 @@ export interface Insight {
 
 /**
  * Generate AI insights from series data
- * Uses GPT-4 to analyze trends, anomalies, and predictions
+ * Uses GPT-4o (latest model) to analyze trends, anomalies, and predictions
  */
 export async function generateInsights(
   series: APISeries[],
@@ -86,7 +86,7 @@ Return ONLY valid JSON array, no markdown or explanation.`
 
   try {
     const completion = await client.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-4o', // Latest GPT-4o model
       messages: [
         {
           role: 'system',
@@ -96,7 +96,7 @@ Return ONLY valid JSON array, no markdown or explanation.`
         { role: 'user', content: prompt },
       ],
       temperature: 0.7,
-      max_tokens: 1000,
+      max_tokens: 1500,
     })
 
     const content = completion.choices[0]?.message?.content

@@ -59,9 +59,31 @@ export default function ScenarioBuilder({
   const [volatility, setVolatility] = React.useState(0.1)
   const [trend, setTrend] = React.useState<SimulationConfig['trend']>('linear')
   const [simulating, setSimulating] = React.useState(false)
+  const [yearRange, setYearRange] = React.useState<{ start: number; end: number } | null>(null)
   const [results, setResults] = React.useState<
     Map<string, ReturnType<typeof buildConfidenceBands>>
   >(new Map())
+
+  // Get available year range from data
+  const availableYearRange = React.useMemo(() => {
+    if (series.length === 0) return { min: 2000, max: 2024 }
+    let min = Infinity
+    let max = -Infinity
+    series.forEach((s) => {
+      s.points.forEach((p) => {
+        if (p.year < min) min = p.year
+        if (p.year > max) max = p.year
+      })
+    })
+    return { min: min === Infinity ? 2000 : min, max: max === -Infinity ? 2024 : max }
+  }, [series])
+
+  // Initialize year range
+  React.useEffect(() => {
+    if (!yearRange && series.length > 0) {
+      setYearRange({ start: availableYearRange.min, end: availableYearRange.max })
+    }
+  }, [availableYearRange, yearRange, series.length])
 
   // Group series by school
   const schoolGroups = React.useMemo(() => {
@@ -148,6 +170,9 @@ export default function ScenarioBuilder({
     results.forEach((schoolResult, schoolId) => {
       // Add historical data
       schoolResult.historical.forEach((p) => {
+        // Filter by year range if set
+        if (yearRange && (p.year < yearRange.start || p.year > yearRange.end)) return
+        
         allYears.add(p.year)
         if (!dataByYear.has(p.year)) {
           dataByYear.set(p.year, { year: p.year })
@@ -173,7 +198,28 @@ export default function ScenarioBuilder({
     return Array.from(allYears)
       .sort((a, b) => a - b)
       .map((year) => dataByYear.get(year)!)
-  }, [results])
+  }, [results, yearRange])
+
+  // Calculate Y-axis domain for better trend visibility
+  const yAxisDomain = React.useMemo<[number, number]>(() => {
+    if (chartData.length === 0) return [0, 100]
+    
+    let min = Infinity
+    let max = -Infinity
+    
+    chartData.forEach((point) => {
+      Object.keys(point).forEach((key) => {
+        if (key !== 'year' && typeof point[key] === 'number') {
+          min = Math.min(min, point[key])
+          max = Math.max(max, point[key])
+        }
+      })
+    })
+    
+    // Add 10% padding for visual breathing room
+    const padding = (max - min) * 0.1
+    return [Math.floor(min - padding), Math.ceil(max + padding)]
+  }, [chartData])
 
   if (series.length === 0) return null
 
@@ -255,6 +301,41 @@ export default function ScenarioBuilder({
           ))}
         </select>
       </div>
+
+      {/* Year Range Selector */}
+      {yearRange && (
+        <div className="mb-6 rounded-lg border border-white/10 bg-gradient-to-br from-cyan-500/5 to-transparent p-4">
+          <label className="mb-3 block text-sm font-semibold text-gray-200">
+            Year Range: {yearRange.start} - {yearRange.end}
+          </label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-xs text-gray-400">Start Year</label>
+              <input
+                type="number"
+                min={availableYearRange.min}
+                max={yearRange.end}
+                value={yearRange.start}
+                onChange={(e) => setYearRange({ ...yearRange, start: +e.target.value })}
+                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-gray-200"
+                aria-label="Start year for chart display"
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-xs text-gray-400">End Year</label>
+              <input
+                type="number"
+                min={yearRange.start}
+                max={availableYearRange.max}
+                value={yearRange.end}
+                onChange={(e) => setYearRange({ ...yearRange, end: +e.target.value })}
+                className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-sm text-gray-200"
+                aria-label="End year for chart display"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Controls Grid */}
       <div className="mb-6 grid gap-4 md:grid-cols-2">
@@ -369,7 +450,7 @@ export default function ScenarioBuilder({
           transition={{ duration: 0.5 }}
           className="rounded-xl border-2 border-white/10 bg-gradient-to-br from-black/40 via-black/60 to-black/40 p-6 shadow-2xl backdrop-blur-md"
         >
-          <ResponsiveContainer width="100%" height={500}>
+          <ResponsiveContainer width="100%" height={750}>
             <ComposedChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 {Array.from(selectedSchools).map((schoolId, idx) => {
@@ -400,6 +481,7 @@ export default function ScenarioBuilder({
                 tick={{ fill: '#d1d5db' }}
               />
               <YAxis
+                domain={yAxisDomain}
                 stroke="#9ca3af"
                 style={{ fontSize: 13, fontWeight: 600 }}
                 tickLine={false}
@@ -419,11 +501,13 @@ export default function ScenarioBuilder({
                 labelStyle={{ color: '#fff', fontWeight: 'bold', marginBottom: 8 }}
                 itemStyle={{ padding: '4px 0' }}
               />
-              <Legend
-                wrapperStyle={{ fontSize: 13, fontWeight: 600, paddingTop: 20 }}
-                iconType="line"
-                iconSize={20}
-              />
+              {selectedSchools.size > 0 && (
+                <Legend
+                  wrapperStyle={{ fontSize: 13, fontWeight: 600, paddingTop: 20 }}
+                  iconType="line"
+                  iconSize={20}
+                />
+              )}
 
               {/* Render for each selected school */}
               {Array.from(selectedSchools).map((schoolId, idx) => {
