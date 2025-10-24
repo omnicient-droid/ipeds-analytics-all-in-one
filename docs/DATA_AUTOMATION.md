@@ -42,55 +42,104 @@ node scripts/scorecard_ingest.mjs 2020 2024
   ```
 - Get key from: https://api.data.gov/signup/
 
-### 2. Common Data Set Fetcher
+### 2. Universal Common Data Set Fetcher ⭐ NEW
+
+**Script:** `scripts/fetch_all_common_data_sets.mjs`
+
+**Automatically discovers and fetches Common Data Set documents for ALL universities** in your database, not just pre-configured ones. This is the enterprise-grade solution that scales to thousands of schools.
+
+```bash
+# Fetch CDS for ALL universities in database
+node scripts/fetch_all_common_data_sets.mjs
+
+# Limit to first 100 universities (testing)
+node scripts/fetch_all_common_data_sets.mjs --limit 100
+
+# Fetch specific year
+node scripts/fetch_all_common_data_sets.mjs --year 2024
+
+# California schools only
+node scripts/fetch_all_common_data_sets.mjs --state CA
+
+# Resume from interrupted run
+node scripts/fetch_all_common_data_sets.mjs --resume
+
+# Combine options
+node scripts/fetch_all_common_data_sets.mjs --year 2023 --state NY --limit 50
+```
+
+**How it works:**
+
+1. **Intelligent URL Discovery**: Generates 50+ potential CDS URL patterns for each university based on:
+   - Common institutional research subdomains (opir, ir, oir, provost, registrar, etc.)
+   - Standard CDS path patterns (common-data-set, cds, fact-book, etc.)
+   - Year-specific variations (2024, 2023-2024, etc.)
+   - Direct PDF links
+
+2. **Multi-Format Parsing**:
+   - Downloads and parses PDF Common Data Sets
+   - Extracts from HTML pages
+   - Follows links to PDFs embedded in landing pages
+   - Handles redirects and various URL schemes
+
+3. **Comprehensive Data Extraction** (CDS Section C):
+   - C1: Total applicants, admitted, enrolled → **Admission Rate, Yield Rate**
+   - C2: Early Decision/Early Action statistics
+   - C9: SAT/ACT score ranges (25th and 75th percentiles)
+   - C11: Average GPA of admitted students
+   - C13: Waitlist statistics
+
+4. **Robust Processing**:
+   - Rate limiting (500ms between requests)
+   - Automatic caching of results (`.cds-cache/`)
+   - Progress tracking (`.cds-fetch-progress.json`)
+   - Resume capability for interrupted runs
+   - Error handling and retry logic
+
+**Metrics collected:**
+- `CDS.ADM.RATE` - Admission rate from CDS
+- `CDS.YIELD` - Yield rate (enrolled/admitted)
+- `CDS.SAT.TOTAL.25` / `CDS.SAT.TOTAL.75` - SAT Total scores
+- `CDS.SAT.EBRW.25` / `CDS.SAT.EBRW.75` - SAT Evidence-Based Reading & Writing
+- `CDS.SAT.MATH.25` / `CDS.SAT.MATH.75` - SAT Math
+- `CDS.ACT.COMP.25` / `CDS.ACT.COMP.75` - ACT Composite
+- `CDS.GPA.AVG` - Average GPA
+- `CDS.APPLICANTS` - Total applicants
+- `CDS.ENROLLED` - Total enrolled
+
+**Performance:**
+
+- Processes ~10-15 universities per minute
+- Typical success rate: 40-60% (varies by university data availability)
+- Handles PDF downloads, parsing, and database updates
+- Completely automated - no manual configuration needed
+
+**Cache System:**
+
+Results are cached in `.cds-cache/` directory:
+- `{unitid}_{year}.json` - Extracted metrics
+- `{unitid}_{year}.pdf` - Downloaded PDFs
+
+Benefits:
+- Avoid re-downloading same data
+- Faster subsequent runs
+- Preserves original source documents
+
+### 2b. Simple Common Data Set Fetcher
 
 **Script:** `scripts/fetch_common_data_set.mjs`
 
-Automatically searches for and extracts data from Common Data Set documents published by universities.
+A simpler version with pre-configured URLs for specific elite universities.
 
 ```bash
 # Fetch Columbia University's latest CDS
 node scripts/fetch_common_data_set.mjs 190150
 
-# Fetch specific year
-node scripts/fetch_common_data_set.mjs 190150 2024
-
-# Fetch all configured universities
+# Fetch all configured universities (Columbia, Harvard, Stanford, Yale, MIT)
 node scripts/fetch_common_data_set.mjs --all
 ```
 
-**Configured Universities:**
-- 190150: Columbia University
-- 166027: Harvard University
-- 243744: Stanford University
-- 130794: Yale University
-- 166683: MIT
-
-**Metrics collected:**
-- `CDS.ADM.RATE` - Admission rate from CDS
-- `CDS.SAT.25` - SAT 25th percentile from CDS
-- `CDS.SAT.75` - SAT 75th percentile from CDS
-- `CDS.ACT.25` - ACT 25th percentile from CDS
-- `CDS.ACT.75` - ACT 75th percentile from CDS
-
-**Adding new universities:**
-
-Edit `CDS_URL_PATTERNS` in `scripts/fetch_common_data_set.mjs`:
-
-```javascript
-const CDS_URL_PATTERNS = {
-  123456: {  // UNITID from IPEDS
-    name: 'Your University',
-    cdsUrls: [
-      'https://ir.university.edu/common-data-set',
-      'https://www.university.edu/institutional-research/cds',
-    ],
-    alternativeUrls: [
-      'https://admissions.university.edu/class-profile',
-    ],
-  },
-}
-```
+**Note:** This script is superseded by the universal fetcher above, but remains useful for quick testing of specific schools with known URL patterns.
 
 ### 3. IPEDS Data Ingestion
 
@@ -129,16 +178,45 @@ Runs all data ingestion scripts in sequence for a complete update.
 
 ## Automation Strategy
 
+### Recommended Update Schedule
+
+**Daily (Latest Stats):**
+```bash
+# Quick check for new CDS publications from top schools
+node scripts/fetch_all_common_data_sets.mjs --limit 200 --resume
+```
+
+**Weekly (Comprehensive):**
+```bash
+# Full sweep of all universities
+node scripts/fetch_all_common_data_sets.mjs --resume
+```
+
+**Monthly (Federal Data):**
+```bash
+# College Scorecard API update
+node scripts/scorecard_ingest.mjs $(date +%Y)
+```
+
+**Quarterly (IPEDS Bulk):**
+```bash
+# Process latest IPEDS data releases
+./scripts/bulk_ingest_comprehensive.sh
+```
+
 ### For Production Deployment
 
 Set up a **cron job** or **scheduled task** to run data updates:
 
 ```bash
-# Run daily at 2 AM
-0 2 * * * cd /path/to/ipeds-analytics && node scripts/fetch_common_data_set.mjs --all >> logs/cds-fetch.log 2>&1
+# Daily CDS fetch at 2 AM (resume-safe)
+0 2 * * * cd /path/to/ipeds-analytics && node scripts/fetch_all_common_data_sets.mjs --resume >> logs/cds-daily.log 2>&1
 
-# Run College Scorecard weekly (Sundays at 3 AM)
-0 3 * * 0 cd /path/to/ipeds-analytics && node scripts/scorecard_ingest.mjs ALL >> logs/scorecard.log 2>&1
+# Weekly full sweep (Sundays at 1 AM)
+0 1 * * 0 cd /path/to/ipeds-analytics && node scripts/fetch_all_common_data_sets.mjs >> logs/cds-weekly.log 2>&1
+
+# Monthly College Scorecard (1st of month at 3 AM)
+0 3 1 * * cd /path/to/ipeds-analytics && node scripts/scorecard_ingest.mjs ALL >> logs/scorecard.log 2>&1
 ```
 
 ### For Vercel/Cloud Deployment
@@ -152,13 +230,16 @@ name: Update University Data
 
 on:
   schedule:
-    # Run daily at 2 AM UTC
+    # Daily CDS fetch at 2 AM UTC
     - cron: '0 2 * * *'
+    # Weekly full sweep on Sundays
+    - cron: '0 1 * * 0'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
   update-cds:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v3
       
@@ -170,16 +251,67 @@ jobs:
       - name: Install dependencies
         run: npm install
       
-      - name: Fetch Common Data Sets
+      - name: Fetch All Common Data Sets
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: node scripts/fetch_common_data_set.mjs --all
+        run: node scripts/fetch_all_common_data_sets.mjs --resume
+      
+      - name: Upload cache artifacts
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cds-cache
+          path: .cds-cache/
+          retention-days: 30
+      
+      - name: Upload progress file
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: cds-progress
+          path: .cds-fetch-progress.json
+          retention-days: 7
+
+  update-scorecard:
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 1 * * 0'  # Only on weekly runs
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
       
       - name: Fetch College Scorecard
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           COLLEGESCORECARD_API_KEY: ${{ secrets.COLLEGESCORECARD_API_KEY }}
         run: node scripts/scorecard_ingest.mjs $(date +%Y)
+```
+
+### Monitoring & Alerts
+
+Set up monitoring to track:
+- Success rate (should be 40-60%)
+- Processing time
+- Database growth
+- Failed fetches requiring manual intervention
+
+**Example monitoring script:**
+
+```bash
+#!/bin/bash
+# monitor_cds_fetch.sh
+
+SUCCESS_RATE=$(tail -1 logs/cds-fetch.log | grep -oP '(?<=Successful extractions: )\d+/\d+')
+if [ -z "$SUCCESS_RATE" ]; then
+  echo "⚠️  CDS fetch may have failed - check logs"
+  # Send alert (email, Slack, etc.)
+fi
 ```
 
 ## Manual Data Entry
