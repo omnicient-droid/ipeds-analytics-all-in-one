@@ -1,37 +1,53 @@
 // app/metrics/page.tsx
 import Link from 'next/link'
 
-const CATALOG: { code: string; name: string; unit?: string; desc?: string }[] =
-  [
-    { code: 'SC.ADM.RATE', name: 'Admission rate (overall)', unit: 'ratio' },
-    { code: 'SC.SAT.TOTAL25', name: 'SAT total 25th percentile', unit: 'score' },
-    { code: 'SC.SAT.TOTAL75', name: 'SAT total 75th percentile', unit: 'score' },
-    // IPEDS EF examples
-    { code: 'EF.EFYTOTL', name: 'Total fall enrollment', unit: 'count' },
-    { code: 'EF.EFYWHITE', name: 'White fall enrollment', unit: 'count' },
-    { code: 'EF.EFYBLACK', name: 'Black fall enrollment', unit: 'count' },
-    { code: 'EF.EFYHISP', name: 'Hispanic/Latino fall enrollment', unit: 'count' },
-    { code: 'EF.EFYASIAN', name: 'Asian fall enrollment', unit: 'count' },
-  ]
+type CatalogItem = {
+  code: string
+  label: string
+  unit?: string
+  category?: string
+  hasData?: boolean
+}
 
-export default function MetricsIndex() {
+async function fetchCatalog(): Promise<CatalogItem[]> {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/metrics/catalog`, {
+    // Works in server components; falls back to relative in local
+    cache: 'no-store',
+  })
+  const json = await res.json()
+  return json.metrics || []
+}
+
+export default async function MetricsIndex() {
+  const items = await fetchCatalog()
+  const byCategory: Record<string, CatalogItem[]> = {}
+  for (const it of items) {
+    const k = it.category || 'Other'
+    ;(byCategory[k] ||= []).push(it)
+  }
   return (
     <div className="box">
       <div className="box-header">Metrics Catalog</div>
       <div className="box-body">
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {CATALOG.map((m) => (
-            <li key={m.code} style={{ padding: '10px 0' }}>
-              <Link href={`/m/${encodeURIComponent(m.code)}`}>
-                <strong>{m.name}</strong>
-              </Link>
-              <div style={{ color: '#5b6470', fontSize: 13 }}>
-                {m.code} · {m.unit || 'unit'}
-                {m.desc ? ` — ${m.desc}` : ''}
-              </div>
-            </li>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {Object.entries(byCategory).map(([cat, list]) => (
+            <div key={cat} className="rounded-xl border border-[var(--border)]">
+              <div className="border-b border-[var(--border)] px-4 py-3 font-semibold">{cat}</div>
+              <ul className="p-2">
+                {list.map((m) => (
+                  <li key={m.code} className="px-2 py-2">
+                    <Link href={`/m/${encodeURIComponent(m.code)}`}>
+                      <strong>{m.label}</strong>
+                    </Link>
+                    <div className="text-xs" style={{ color: 'var(--muted)' }}>
+                      {m.code} · {m.unit || 'unit'} · {m.hasData ? 'available' : 'skeleton'}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       </div>
     </div>
   )

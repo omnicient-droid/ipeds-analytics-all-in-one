@@ -2,18 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---------- Futuristic Design Tokens ---------- */
+/* ---------- Design Tokens (light-first) ---------- */
 :root {
-  --background-start: #0a0e1a;
-  --background-end: #1a1f35;
-  --foreground: #e8edf9;
-  --card-bg: rgba(26, 31, 53, 0.5);
-  --card-border: rgba(59, 130, 246, 0.3);
-  --primary: #3b82f6;
-  --secondary: #8b5cf6;
-  --accent: #10b981;
-  --glow-blue: rgba(59, 130, 246, 0.6);
-  --glow-purple: rgba(139, 92, 246, 0.6);
+  --bg: #fafafa;
+  --fg: #0b1220;
+  --muted: #6b7280; /* gray-500 */
+  --card: #ffffff;
+  --border: rgba(17, 24, 39, 0.08); /* gray-900 @ 8% */
+  --accent: #2563eb; /* blue-600 */
+  --accent-2: #06b6d4; /* cyan-500 */
+  --ring: rgba(37, 99, 235, 0.25);
+}
+
+.dark {
+  --bg: #0a0e1a;
+  --fg: #e8edf9;
+  --muted: #a3aed0;
+  --card: rgba(17, 24, 39, 0.6);
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #3b82f6; /* blue-500 */
+  --accent-2: #8b5cf6; /* violet-500 */
+  --ring: rgba(59, 130, 246, 0.35);
 }
 
 /* ---------- Base ---------- */
@@ -23,9 +32,8 @@ html {
 
 body {
   margin: 0;
-  background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
-  background-attachment: fixed;
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -40,132 +48,62 @@ body {
   padding-right: 1rem;
 }
 
-/* Animated background with moving particles */
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image:
-    radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 40% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-  animation: breathe 8s ease-in-out infinite;
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* Subtle grid overlay for a "statistical museum" backdrop */
+/* Subtle background ornamentation (very light) */
+body::before,
 body::after {
-  content: '';
+  pointer-events: none;
   position: fixed;
   inset: 0;
-  pointer-events: none;
   z-index: -1;
-  opacity: 0.06;
+}
+body::before {
+  content: '';
+  opacity: 0.03; /* extremely subtle */
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    radial-gradient(600px 300px at 10% 20%, var(--accent) / 10 0%, transparent 60%),
+    radial-gradient(600px 300px at 90% 80%, var(--accent-2) / 12 0%, transparent 60%);
+}
+body::after {
+  content: '';
+  opacity: 0.02;
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px);
   background-size:
-    40px 40px,
-    40px 40px;
+    48px 48px,
+    48px 48px;
   background-position: center center;
 }
 
-@keyframes breathe {
-  0%,
-  100% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.05);
-  }
+/* Links */
+a {
+  text-decoration: none;
+  color: inherit;
 }
 
-a,
-a:visited,
-a:hover,
-a:active,
-a:focus {
-  text-decoration: none !important;
-}
-
-/* ---------- Glassmorphism Cards with 3D ---------- */
-.glass-card {
-  border-radius: 0.75rem;
-  border: 1px solid var(--card-border);
-  background: var(--card-bg);
-  -webkit-backdrop-filter: blur(32px);
-  backdrop-filter: blur(32px);
-  box-shadow:
-    0 8px 32px 0 rgba(31, 38, 135, 0.4),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-  position: relative;
-  transform-style: preserve-3d;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 0.75rem;
-  background: linear-gradient(
-    135deg,
-    rgba(59, 130, 246, 0.1) 0%,
-    transparent 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.glass-card:hover::before {
-  opacity: 1;
-}
-
+/* Cards */
+.glass-card,
 .glass-card-hover {
   border-radius: 0.75rem;
-  border: 1px solid var(--card-border);
-  background: var(--card-bg);
-  -webkit-backdrop-filter: blur(32px);
-  backdrop-filter: blur(32px);
+  border: 1px solid var(--border);
+  background: var(--card);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   box-shadow:
-    0 8px 32px 0 rgba(31, 38, 135, 0.4),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-  position: relative;
-  transform-style: preserve-3d;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 20px rgba(0, 0, 0, 0.06);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .glass-card-hover:hover {
-  transform: translateY(-4px) rotateX(2deg);
-  box-shadow:
-    0 20px 60px 0 rgba(59, 130, 246, 0.4),
-    0 0 40px 0 rgba(59, 130, 246, 0.2),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
-  border-color: var(--glow-blue);
+  transform: translateY(-2px);
+  border-color: var(--ring);
 }
 
-/* 3D Tilt Cards */
-.card-3d {
-  perspective: 1000px;
-}
-
-.card-3d-inner {
-  transition: transform 0.2s ease-out;
-  transform-style: preserve-3d;
-}
-
-/* ---------- Chart Animations ---------- */
+/* Chart skeletons */
 @keyframes shimmer {
   0% {
     background-position: -1000px 0;
@@ -174,85 +112,21 @@ a:focus {
     background-position: 1000px 0;
   }
 }
-
 .chart-skeleton {
   background: linear-gradient(
     90deg,
-    rgba(26, 31, 53, 0.4) 0%,
-    rgba(59, 130, 246, 0.2) 50%,
-    rgba(26, 31, 53, 0.4) 100%
+    rgba(0, 0, 0, 0.03) 0%,
+    rgba(37, 99, 235, 0.08) 50%,
+    rgba(0, 0, 0, 0.03) 100%
   );
   background-size: 1000px 100%;
-  animation: shimmer 1.5s infinite;
+  animation: shimmer 1.4s infinite;
   border-radius: 0.5rem;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.chart-fade-in {
-  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.float-animation {
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes glow-pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 0 20px rgba(59, 130, 246, 0.3),
-      0 0 40px rgba(59, 130, 246, 0.1);
-  }
-  50% {
-    box-shadow:
-      0 0 30px rgba(59, 130, 246, 0.5),
-      0 0 60px rgba(59, 130, 246, 0.2);
-  }
-}
-
-.glow-pulse {
-  animation: glow-pulse 2s ease-in-out infinite;
-}
-
-@keyframes rotate-gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.gradient-animated {
-  background-size: 200% 200%;
-  animation: rotate-gradient 3s ease infinite;
-}
-/* ---------- Present / Print helpers ---------- */
+/* Print helpers */
 body.present {
-  background: #000;
+  background: #fff;
 }
 body.present header,
 body.present nav,
@@ -279,14 +153,14 @@ body.present main {
   }
 }
 
-/* charts */
+/* Recharts */
 .recharts-default-tooltip {
   border-radius: 0.5rem !important;
-  border: 1px solid var(--card-border) !important;
-  background: var(--card-bg) !important;
-  -webkit-backdrop-filter: blur(24px) !important;
-  backdrop-filter: blur(24px) !important;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
   font-size: 12px;
   padding: 12px !important;
 }
@@ -295,12 +169,97 @@ body.present main {
   cursor: pointer;
   transition: opacity 0.2s;
 }
-
 .recharts-legend-item:hover {
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: rgba(59, 130, 246, 0.1);
+  stroke: rgba(0, 0, 0, 0.06);
+}
+
+/* Forms */
+input[type='text'],
+input[type='search'],
+select,
+textarea {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+/* ---------- App boxes (used across pages) ---------- */
+.box {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 20px rgba(0, 0, 0, 0.06);
+}
+.box-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  color: var(--fg);
+}
+.box-body {
+  padding: 16px;
+}
+
+/* Buttons */
+button.primary,
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  border: 1px solid transparent;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 6px 16px rgba(37, 99, 235, 0.25);
+  transition:
+    filter 0.15s ease,
+    transform 0.05s ease;
+}
+button.primary:hover,
+.btn-primary:hover {
+  filter: brightness(0.95);
+}
+button.primary:active,
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  text-align: left;
+  padding: 10px 8px;
+}
+thead th {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+tbody tr + tr {
+  border-top: 1px solid var(--border);
 }

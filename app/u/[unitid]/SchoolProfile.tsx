@@ -10,6 +10,8 @@ import { friendlyLabelFromCode } from '@/lib/labels'
 import { useToast } from '@/components/ToastProvider'
 import type { TransformKind } from '@/components/TransformControls'
 import { countyFipsForUnit } from '@/lib/place'
+import AIInsights from '@/components/AIInsights'
+import type { Insight } from '@/lib/insights'
 
 interface SchoolProfileProps {
   unitid: number
@@ -68,6 +70,8 @@ export default function SchoolProfile({
   const [facultyRaceSeries, setFacultyRaceSeries] = React.useState<APISeries[]>([])
   const [placeSeries, setPlaceSeries] = React.useState<APISeries[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [insights, setInsights] = React.useState<Insight[]>([])
+  const [insightsLoading, setInsightsLoading] = React.useState(false)
   const toast = useToast()
 
   React.useEffect(() => {
@@ -167,6 +171,8 @@ export default function SchoolProfile({
             `Loaded ${totalMetrics} metrics for ${schoolName}`,
             3000,
           )
+          // Fetch AI insights in background
+          loadInsights()
         } else {
           toast.show(
             'warning',
@@ -189,6 +195,39 @@ export default function SchoolProfile({
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unitid])
+
+  // Load AI insights
+  const loadInsights = React.useCallback(async () => {
+    if (enrollmentSeries.length === 0 && admissionsSeries.length === 0) return
+
+    setInsightsLoading(true)
+    try {
+      const allCodes = [
+        ...ENROLLMENT_CODES,
+        ...ADMISSIONS_CODES,
+        ...OUTCOMES_CODES,
+        ...FINANCE_CODES,
+      ]
+      const response = await fetch('/api/insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          unitid,
+          schoolName,
+          codes: allCodes,
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setInsights(data.insights || [])
+      }
+    } catch (error) {
+      console.error('[Insights] Failed to load:', error)
+    } finally {
+      setInsightsLoading(false)
+    }
+  }, [unitid, schoolName, enrollmentSeries, admissionsSeries])
 
   // Build comparison series with national benchmarks
   const admissionComparison = React.useMemo(() => {
@@ -293,9 +332,7 @@ export default function SchoolProfile({
   }, [facultyRaceSeries])
 
   // Helper: change summary for any series list
-  function buildChangeSummary(
-    series: APISeries[],
-  ): {
+  function buildChangeSummary(series: APISeries[]): {
     code: string
     label: string
     abs: number | null
@@ -640,6 +677,9 @@ export default function SchoolProfile({
           />
         </motion.div>
       )}
+
+      {/* AI Insights */}
+      <AIInsights insights={insights} loading={insightsLoading} onRefresh={loadInsights} />
 
       {/* Summary Stats */}
       <motion.div

@@ -1,93 +1,47 @@
 'use client'
 import Link from 'next/link'
 import ThemeToggle from './ThemeToggle'
-import { useRef, useEffect } from 'react'
+import Header3D from './Header3D'
 
 export default function Header() {
-  const logoRef = useRef<HTMLDivElement>(null)
-  const headerRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (headerRef.current) {
-        const scrolled = window.scrollY > 50
-        headerRef.current.style.background = scrolled ? 'rgba(10,14,26,0.9)' : 'rgba(10,14,26,0.7)'
-      }
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  const onMove: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    const el = logoRef.current
-    if (!el) return
-    const rect = el.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / rect.width
-    const y = (e.clientY - rect.top) / rect.height
-    const rx = (y - 0.5) * -18
-    const ry = (x - 0.5) * 18
-    el.style.transform = `perspective(1000px) rotateX(${rx}deg) rotateY(${ry}deg) translateZ(8px) scale(1.08)`
-  }
-  const onLeave = () => {
-    const el = logoRef.current
-    if (!el) return
-    el.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1)'
-  }
   return (
-    <header
-      ref={headerRef}
-      className="sticky top-0 z-40 border-b backdrop-blur-xl transition-all duration-300"
-      style={{
-        background: 'rgba(10, 14, 26, 0.7)',
-        borderColor: 'rgba(59, 130, 246, 0.25)',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.3)',
-      }}
-    >
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="group flex items-center gap-3 text-lg font-semibold no-underline">
-          <div className="relative">
-            <div
-              ref={logoRef}
-              onMouseMove={onMove}
-              onMouseLeave={onLeave}
-              className="glow-pulse relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-blue-600 shadow-2xl transition-all duration-200 will-change-transform"
-              style={{ transformStyle: 'preserve-3d' }}
-            >
+    <header className="sticky top-0 z-40 border-b border-neutral-200/60 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70 dark:border-white/10 dark:bg-neutral-950/80 dark:supports-[backdrop-filter]:bg-neutral-900/60">
+      {/* Thin accent line */}
+      <div className="h-[2px] w-full bg-gradient-to-r from-[var(--accent)] via-[var(--accent-2)] to-[var(--accent)] opacity-30" />
+      <div className="relative">
+        {/* Subtle animated background */}
+        <div className="pointer-events-none absolute inset-0 opacity-70 mix-blend-multiply dark:opacity-60">
+          <Header3D />
+        </div>
+        <div className="relative container mx-auto flex h-14 items-center justify-between px-4">
+          <Link
+            href="/"
+            className="group flex items-center gap-3 text-base font-semibold no-underline"
+          >
+            <div className="relative inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-sm">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
               <span className="sr-only">Statipedia</span>
             </div>
-            <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-br from-blue-400 to-purple-600 opacity-40 blur-md"></div>
-          </div>
-          <span className="gradient-animated bg-gradient-to-r from-blue-400 via-purple-400 to-blue-500 bg-clip-text font-bold text-transparent">
-            Statipedia
-          </span>
-        </Link>
-        <nav className="flex items-center gap-6 md:gap-8">
-          <Link
-            href="/compare"
-            className="rounded-lg border border-transparent px-4 py-2 text-sm text-gray-300 no-underline transition-all duration-200 hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-white"
-          >
-            Compare
+            <span className="text-[var(--fg)]">Statipedia</span>
           </Link>
-          <Link
-            href="/u/190150"
-            className="rounded-lg border border-transparent px-4 py-2 text-sm text-gray-300 no-underline transition-all duration-200 hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-white"
-          >
-            Columbia
-          </Link>
-          <Link
-            href="/u/199120"
-            className="rounded-lg border border-transparent px-4 py-2 text-sm text-gray-300 no-underline transition-all duration-200 hover:border-purple-500/30 hover:bg-purple-500/10 hover:text-white"
-          >
-            UNC
-          </Link>
-          <Link
-            href="/u/166027"
-            className="rounded-lg border border-transparent px-4 py-2 text-sm text-gray-300 no-underline transition-all duration-200 hover:border-purple-500/30 hover:bg-purple-500/10 hover:text-white"
-          >
-            Harvard
-          </Link>
-          <ThemeToggle />
-        </nav>
+          <nav className="flex items-center gap-2 md:gap-3">
+            {[
+              { href: '/compare', label: 'Compare' },
+              { href: '/u/190150', label: 'Columbia' },
+              { href: '/u/199120', label: 'UNC' },
+              { href: '/u/166027', label: 'Harvard' },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-md px-3 py-2 text-sm text-neutral-700 transition-colors hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white"
+              >
+                {item.label}
+              </Link>
+            ))}
+            <ThemeToggle />
+          </nav>
+        </div>
       </div>
     </header>
   )

@@ -26,10 +26,24 @@ export default async function MetricPage({ params }: { params: Promise<{ code: s
   })
 
   if (!metric) {
+    // Friendly skeleton placeholder
     return (
       <div className="box">
-        <div className="box-header">Unknown metric</div>
-        <div className="box-body">No data has been ingested for {code}.</div>
+        <div className="box-header">{friendlyLabelFromCode(code)}</div>
+        <div className="box-body">
+          <p>
+            This metric is recognized but data hasn&apos;t been ingested yet. It will appear
+            automatically once the ingestion finishes.
+          </p>
+          <p style={{ marginTop: 8 }}>
+            See the full <a href="/metrics">Metrics Catalog</a> for what&apos;s available and
+            what&apos;s queued as a skeleton.
+          </p>
+          <div
+            className="chart-skeleton"
+            style={{ height: 260, borderRadius: 12, marginTop: 16 }}
+          />
+        </div>
       </div>
     )
   }
