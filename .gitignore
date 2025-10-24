@@ -30,3 +30,6 @@ app/api/**/*.jsx
 # Never commit UI under /app/api
 app/api/**/*.tsx
 app/api/**/*.jsx
+
+# Ignore deprecated demo data files
+data/demo/
