@@ -1,77 +1,26 @@
-// app/search/page.tsx
-import { prisma } from '@/lib/db'
-import Link from 'next/link'
+import * as React from 'react'
+import SearchEngine from './SearchEngine'
 
-async function runSearch(q: string) {
-  if (!q) return []
-  const num = Number(q)
-  return prisma.university.findMany({
-    where: {
-      OR: [
-        { name: { contains: q, mode: 'insensitive' } },
-        { city: { contains: q, mode: 'insensitive' } },
-        { state: { equals: q.toUpperCase() } },
-        ...(Number.isFinite(num) ? [{ unitid: num }] : []),
-      ],
-    },
-    orderBy: [{ name: 'asc' }],
-    take: 50,
-    select: { id: true, unitid: true, name: true, city: true, state: true },
-  })
+export const metadata = {
+  title: 'Smart Search - IPEDS Analytics',
+  description:
+    'Find schools with fuzzy search and intelligent filters. Search by name, location, sector, level, division, or conference.',
 }
 
-export default async function SearchPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>
-}) {
-  const { q: rawQ = '' } = await searchParams
-  const q = rawQ.trim()
-  const results = await runSearch(q)
-
+export default function SearchPage() {
   return (
-    <div className="box">
-      <div className="box-header">Search</div>
-      <div className="box-body">
-        <form action="/search" method="get" className="inline" role="search">
-          <input
-            type="search"
-            name="q"
-            defaultValue={q}
-            placeholder="Search by name, city, state, or UNITID…"
-          />
-          <button className="primary" type="submit">
-            Search
-          </button>
-        </form>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 px-4 py-12">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8 text-center">
+          <h1 className="mb-3 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-4xl font-bold text-transparent">
+            Smart Search
+          </h1>
+          <p className="text-gray-400">
+            Discover schools with AI-powered fuzzy matching and intelligent filters
+          </p>
+        </div>
 
-        {q && (
-          <>
-            <p style={{ marginTop: 12, color: '#5b6470' }}>Found {results.length} result(s).</p>
-            <table role="table" aria-label="Search results">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>City</th>
-                  <th>State</th>
-                  <th>UNITID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {results.map((r) => (
-                  <tr key={r.id}>
-                    <td>
-                      <Link href={`/u/${r.unitid}`}>{r.name || '(Unnamed)'}</Link>
-                    </td>
-                    <td>{r.city}</td>
-                    <td>{r.state}</td>
-                    <td>{r.unitid}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </>
-        )}
+        <SearchEngine />
       </div>
     </div>
   )
