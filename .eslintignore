@@ -1,0 +1,7 @@
+# Ignore build and cache
+.next/
+.turbo/
+node_modules/
+
+# Ignore deprecated demo data (corrupted TS)
+data/demo/**
