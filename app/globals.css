@@ -263,3 +263,71 @@ thead th {
 tbody tr + tr {
   border-top: 1px solid var(--border);
 }
+
+/* Custom slider styles for ScenarioBuilder */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 5px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff, #e5e7eb);
+  cursor: pointer;
+  border: 3px solid currentColor;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+input[type='range']::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fff, #e5e7eb);
+  cursor: pointer;
+  border: 3px solid currentColor;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+input[type='range']::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.slider-blue::-webkit-slider-thumb {
+  border-color: #3b82f6;
+}
+
+.slider-purple::-webkit-slider-thumb {
+  border-color: #8b5cf6;
+}
+
+.slider-emerald::-webkit-slider-thumb {
+  border-color: #10b981;
+}
+
+.slider-blue::-moz-range-thumb {
+  border-color: #3b82f6;
+}
+
+.slider-purple::-moz-range-thumb {
+  border-color: #8b5cf6;
+}
+
+.slider-emerald::-moz-range-thumb {
+  border-color: #10b981;
+}
